@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:plus="http://schemas.android.com/apk/lib/com.google.android.gms.plus"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:paddingBottom="16dp"
+    android:minHeight="?android:listPreferredItemHeightSmall"
+    android:gravity="center_vertical">
+
+    <LinearLayout
+        android:id="@+id/main_target"
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:paddingTop="16dp"
+        android:paddingLeft="16dp"
+        android:paddingRight="16dp"
+        android:clickable="true"
+        android:focusable="true"
+        android:background="?android:selectableItemBackground">
+
+        <ImageView android:id="@+id/thumbnail"
+            android:layout_width="match_parent"
+            android:layout_height="160dp"
+            android:scaleType="centerCrop"
+            android:layout_marginBottom="8dp"
+            android:background="#1000" />
+
+        <TextView android:layout_width="wrap_content"
+            style="?android:textAppearanceMedium"
+            android:fontFamily="sans-serif-condensed"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="4dp"
+            android:id="@android:id/text1" />
+
+    </LinearLayout>
+
+    <com.google.android.gms.plus.PlusOneButton
+        android:id="@+id/plus_button"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:paddingLeft="16dp"
+        android:paddingRight="16dp"
+        plus:annotation="inline"
+        plus:size="standard" />
+
+</LinearLayout>

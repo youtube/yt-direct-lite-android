@@ -1,0 +1,25 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:divider="?android:dividerVertical"
+    android:orientation="horizontal"
+    android:showDividers="middle" >
+
+    <fragment
+        android:id="@+id/list_fragment"
+        android:name="com.google.ytdl.UploadsListFragment"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="2"
+        tools:layout="@layout/list_fragment" />
+
+    <fragment
+        android:id="@+id/direct_fragment"
+        android:name="com.google.ytdl.DirectFragment"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="5"
+        tools:layout="@layout/direct_fragment" />
+
+</LinearLayout>

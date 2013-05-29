@@ -1,0 +1,14 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:id="@+id/action_refresh"
+        android:title="Refresh"
+        android:showAsAction="ifRoom|withText" />
+    <item android:id="@+id/action_youtube"
+          android:title="View on YouTube"
+          android:showAsAction="never" />
+    <item android:id="@+id/action_sign_in"
+        android:title="Sign in"
+        android:showAsAction="never" />
+    <item android:id="@+id/action_sign_out"
+        android:title="Sign out"
+        android:showAsAction="never" />
+</menu>

@@ -1,0 +1,60 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical" >
+    
+        <TextView
+            android:id="@+id/display_name"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:fontFamily="sans-serif-light"
+            android:layout_marginLeft="8dp"
+            android:text="Pick or Record a video to upload"
+            android:textAppearance="?android:textAppearanceMedium" />
+    
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" >
+
+        <Button
+            android:id="@+id/pick_button"
+            android:drawableTop="@drawable/gallery"
+            style="?android:attr/borderlessButtonStyle"
+            android:textAppearance="?android:textAppearanceLarge"
+            android:fontFamily="sans-serif-condensed"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:hint="@string/button_pick"
+            android:onClick="pickFile" />
+
+        <Button
+            android:id="@+id/record_button"
+            style="?android:attr/borderlessButtonStyle"
+            android:textAppearance="?android:textAppearanceLarge"
+            android:fontFamily="sans-serif-condensed"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentRight="true"
+            android:drawableTop="@drawable/record_button"
+            android:hint="@string/button_record"
+            android:onClick="recordVideo" />
+
+    </RelativeLayout>
+
+    <FrameLayout
+        android:id="@+id/detail_container"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+    
+        <Button
+            android:id="@+id/upload_button"
+            android:layout_width="match_parent"
+            android:textAppearance="?android:textAppearanceLarge"
+            android:fontFamily="sans-serif-condensed"
+            android:drawableLeft="@drawable/upload"
+            android:layout_height="wrap_content"
+            android:hint="@string/button_ytdl"
+            android:onClick="uploadVideo" />
+ </LinearLayout>
+    

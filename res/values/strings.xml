@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">YouTube Direct Lite</string>
+    <string name="button_authorize">Authorize</string>
+    <string name="button_record">Record</string>
+    <string name="button_pick">Gallery</string>
+    <string name="button_ytdl">Send to YTDL</string>
+    <string name="menu_settings">Settings</string>
+    <string name="title_activity_main">MainActivity</string>
+    <string name="title_activity_display_message">My Message</string>
+    <string name="google_play_not_available">Google Play Services not available</string>
+    <string name="youtube_direct_lite_upload_started">YouTube Direct Lite upload started</string>
+    <string name="connection_to_google_play_failed">Connection to Play Services failed.</string>
+    <string name="youtube_upload">YouTube upload</string>
+    <string name="not_signed_in">Not signed in</string>
+
+</resources>
