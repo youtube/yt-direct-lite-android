@@ -206,16 +206,25 @@ public class MainActivity extends Activity implements UploadsListFragment.Callba
      */
     private void showMissingConfigurations() {
         List<MissingConfig> missingConfigs = new ArrayList<MissingConfig>();
-        missingConfigs.add(new MissingConfig("API key not configured", "API key in Auth.java must be configured"));
-        // TODO implement me
 
-        ListView missingConfigList = (ListView) findViewById(R.id.missing_config_list);
+        // Make sure an API key is registered
+        if(Auth.KEY.startsWith("Replace")) {
+            missingConfigs.add(new MissingConfig("API key not configured", "KEY constant in Auth.java must be configured with your Simple API key from the Google API Console"));
+        }
+
+        // Make sure a playlist ID is registered
+        if(Constants.UPLOAD_PLAYLIST.startsWith("Replace")) {
+            missingConfigs.add(new MissingConfig("Playlist ID not configured", "UPLOAD_PLAYLIST constant in Constants.java must be configured with a Playlist ID to submit to. (The playlist ID typically has a prexix of PL)"));
+        }
+
+
+        // Renders a simple_list_item_2, which consists of a title and a body element
         ListAdapter adapter = new ArrayAdapter<MissingConfig>(this, android.R.layout.simple_list_item_2, missingConfigs) {
             @Override
             public View getView(int position, View convertView, ViewGroup parent) {
                 View row;
                 if(convertView == null){
-                    LayoutInflater inflater = (LayoutInflater)getApplicationContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+                    LayoutInflater inflater = (LayoutInflater) getApplicationContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
                     row = inflater.inflate(android.R.layout.simple_list_item_2, null);
                 }else{
                     row = convertView;
@@ -229,6 +238,9 @@ public class MainActivity extends Activity implements UploadsListFragment.Callba
                 return row;
             }
         };
+
+        // Wire the data adapter up to the view
+        ListView missingConfigList = (ListView) findViewById(R.id.missing_config_list);
         missingConfigList.setAdapter(adapter);
     }
 
