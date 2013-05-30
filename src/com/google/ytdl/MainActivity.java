@@ -108,43 +108,80 @@ public class MainActivity extends Activity implements UploadsListFragment.Callba
     protected void onCreate(Bundle savedInstanceState) {
         getWindow().requestFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
 
-        ensureFetcher();
-        mButton = (Button) findViewById(R.id.upload_button);
-        mButton.setEnabled(false);
-
-        int errorCode = GooglePlayServicesUtil.isGooglePlayServicesAvailable(this);
-        if (errorCode != ConnectionResult.SUCCESS) {
-            if (GooglePlayServicesUtil.isUserRecoverableError(errorCode)) {
-                Dialog errorDialog =
-                        GooglePlayServicesUtil.getErrorDialog(errorCode, this, REQUEST_GMS_ERROR_DIALOG);
-                if (errorDialog != null) {
-                    errorDialog.show();
-                }
-            } else {
-                Toast.makeText(this, R.string.google_play_not_available , Toast.LENGTH_SHORT).show();
-                finish();
-            }
-        }
-
-        if (savedInstanceState != null) {
-            mToken = savedInstanceState.getString(TOKEN_KEY);
-            mChosenAccountName = savedInstanceState.getString(ACCOUNT_KEY);
+        // Check to see if the proper keys and playlist IDs have been set up
+        if (!isCorrectlyConfigured()) { // TODO implement me
+            setContentView(R.layout.developer_setup_required);
+            showMissingConfigurations();
         } else {
-            loadAccount();
-        }
+            setContentView(R.layout.activity_main);
 
-        mHandler.post(new Runnable() {
-            @Override
-            public void run() {
-                loadData();
+            ensureFetcher();
+            mButton = (Button) findViewById(R.id.upload_button);
+            mButton.setEnabled(false);
+
+            int errorCode = GooglePlayServicesUtil.isGooglePlayServicesAvailable(this);
+            if (errorCode != ConnectionResult.SUCCESS) {
+                if (GooglePlayServicesUtil.isUserRecoverableError(errorCode)) {
+                    Dialog errorDialog =
+                            GooglePlayServicesUtil.getErrorDialog(errorCode, this, REQUEST_GMS_ERROR_DIALOG);
+                    if (errorDialog != null) {
+                        errorDialog.show();
+                    }
+                } else {
+                    Toast.makeText(this, R.string.google_play_not_available, Toast.LENGTH_SHORT).show();
+                    finish();
+                }
             }
-        });
 
-        mUploadsListFragment =
-                (UploadsListFragment) getFragmentManager().findFragmentById(R.id.list_fragment);
-        mDirectFragment = (DirectFragment) getFragmentManager().findFragmentById(R.id.direct_fragment);
+            if (savedInstanceState != null) {
+                mToken = savedInstanceState.getString(TOKEN_KEY);
+                mChosenAccountName = savedInstanceState.getString(ACCOUNT_KEY);
+            } else {
+                loadAccount();
+            }
+
+            mHandler.post(new Runnable() {
+                @Override
+                public void run() {
+                    loadData();
+                }
+            });
+
+            mUploadsListFragment =
+                    (UploadsListFragment) getFragmentManager().findFragmentById(R.id.list_fragment);
+            mDirectFragment = (DirectFragment) getFragmentManager().findFragmentById(R.id.direct_fragment);
+        }
+    }
+
+    /**
+     * This method checks various internal states to figure out at startup time whether certain elements
+     * have been configured correctly by the developer. Checks that:
+     * <ul>
+     * <li>the API key has been configured</li>
+     * <li>the playlist ID has been configured</li>
+     * </ul>
+     *
+     * @return true if the application is correctly configured for use, false if not
+     */
+    private boolean isCorrectlyConfigured() {
+        // This isn't going to internationalize well, but we only really need this for the sample app.
+        // Real applications will remove this section of code and ensure that all of these values are configured.
+        if(Auth.KEY.startsWith("Replace")) {
+            return false;
+        }
+        if(Constants.UPLOAD_PLAYLIST.startsWith("Replace")) {
+            return false;
+        }
+        return true;
+    }
+
+    /**
+     * This method renders the ListView explaining what the configurations the developer of this application
+     * has to complete. Typically, these are static variables defined in {@link Auth} and {@link Constants}.
+     */
+    private void showMissingConfigurations() {
+
     }
 
     @Override

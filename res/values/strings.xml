@@ -14,5 +14,6 @@
     <string name="connection_to_google_play_failed">Connection to Play Services failed.</string>
     <string name="youtube_upload">YouTube upload</string>
     <string name="not_signed_in">Not signed in</string>
+    <string name="dev_setup_explanation">If you\'re seeing this screen, congratulations! You\'ve set up the dependencies for YouTube Direct Lite correctly. You just need to set up the following for the app to work correctly:</string>
 
 </resources>
