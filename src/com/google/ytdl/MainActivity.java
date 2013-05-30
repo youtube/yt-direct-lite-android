@@ -37,6 +37,7 @@ import com.google.api.services.youtube.model.PlaylistItem;
 import com.google.api.services.youtube.model.PlaylistItemListResponse;
 import com.google.api.services.youtube.model.Video;
 import com.google.api.services.youtube.model.VideoListResponse;
+import com.google.common.collect.Lists;
 import com.google.ytdl.util.ImageFetcher;
 import com.google.ytdl.util.VideoData;
 
@@ -57,18 +58,27 @@ import android.provider.MediaStore;
 import android.support.v4.content.LocalBroadcastManager;
 import android.text.TextUtils;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.Window;
+import android.widget.Adapter;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.ListAdapter;
+import android.widget.ListView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author Ibrahim Ulukaya <ulukaya@google.com>
@@ -177,11 +187,49 @@ public class MainActivity extends Activity implements UploadsListFragment.Callba
     }
 
     /**
+     * Private class representing a missing configuration and what the developer can do to fix the issue.
+     */
+    private class MissingConfig {
+
+        public final String title;
+        public final String body;
+
+        public MissingConfig(String title, String body) {
+            this.title = title;
+            this.body = body;
+        }
+    }
+
+    /**
      * This method renders the ListView explaining what the configurations the developer of this application
      * has to complete. Typically, these are static variables defined in {@link Auth} and {@link Constants}.
      */
     private void showMissingConfigurations() {
+        List<MissingConfig> missingConfigs = new ArrayList<MissingConfig>();
+        missingConfigs.add(new MissingConfig("API key not configured", "API key in Auth.java must be configured"));
+        // TODO implement me
 
+        ListView missingConfigList = (ListView) findViewById(R.id.missing_config_list);
+        ListAdapter adapter = new ArrayAdapter<MissingConfig>(this, android.R.layout.simple_list_item_2, missingConfigs) {
+            @Override
+            public View getView(int position, View convertView, ViewGroup parent) {
+                View row;
+                if(convertView == null){
+                    LayoutInflater inflater = (LayoutInflater)getApplicationContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+                    row = inflater.inflate(android.R.layout.simple_list_item_2, null);
+                }else{
+                    row = convertView;
+                }
+
+                TextView titleView = (TextView) row.findViewById(android.R.id.text1);
+                TextView bodyView = (TextView) row.findViewById(android.R.id.text2);
+                MissingConfig config = getItem(position);
+                titleView.setText(config.title);
+                bodyView.setText(config.body);
+                return row;
+            }
+        };
+        missingConfigList.setAdapter(adapter);
     }
 
     @Override

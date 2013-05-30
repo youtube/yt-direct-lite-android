@@ -16,7 +16,7 @@
     <ListView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:id="@+id/necessaryConfigurationsList"
+            android:id="@+id/missing_config_list"
             android:layout_marginLeft="32dp"
             android:layout_marginRight="32dp"
             android:layout_gravity="center"/>
