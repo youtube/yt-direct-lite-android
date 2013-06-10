@@ -504,28 +504,42 @@ public class MainActivity extends Activity implements UploadsListFragment.Callba
 
                 HttpTransport httpTransport = new NetHttpTransport();
                 JsonFactory jsonFactory = new JacksonFactory();
-
+                
+                // YouTube object used to make all API requests.
                 YouTube yt =
                         new YouTube.Builder(httpTransport, jsonFactory, credential).setApplicationName(
                                 Constants.APP_NAME).build();
 
                 try {
+                    /*
+                     * Now that the user is authenticated, the app makes a channels list request to get the
+                     * authenticated user's channel. Returned with that data is the playlist id for the uploaded
+                     * videos. https://developers.google.com/youtube/v3/docs/channels/list
+                     */
                     ChannelListResponse clr = yt.channels().list("contentDetails").setMine(true).execute();
+                    
+                    // Get the user's uploads playlist's id from channel list response
                     String uploadsPlaylistId =
                             clr.getItems().get(0).getContentDetails().getRelatedPlaylists().getUploads();
 
                     List<VideoData> videos = new ArrayList<VideoData>();
+                    
+                    // Get videos from user's upload playlist with a playlist items list request
                     PlaylistItemListResponse pilr =
                             yt.playlistItems().list("id,contentDetails").setPlaylistId(uploadsPlaylistId)
                                     .setMaxResults(20l).execute();
                     List<String> videoIds = new ArrayList<String>();
+                    
+                    // Iterate over playlist item list response to get uploaded videos' ids.
                     for (PlaylistItem item : pilr.getItems()) {
                         videoIds.add(item.getContentDetails().getVideoId());
                     }
-
+                    
+                    // Get details of uploaded videos with a videos list request.
                     VideoListResponse vlr =
                             yt.videos().list(TextUtils.join(",", videoIds), "id,snippet,status").execute();
 
+                    // Add only the public videos to the local videos list.
                     for (Video video : vlr.getItems()) {
                         if ("public".equals(video.getStatus().getPrivacyStatus())) {
                             VideoData videoData = new VideoData();
@@ -533,7 +547,8 @@ public class MainActivity extends Activity implements UploadsListFragment.Callba
                             videos.add(videoData);
                         }
                     }
-
+                    
+                    //Sort videos by title
                     Collections.sort(videos, new Comparator<VideoData>() {
                         @Override
                         public int compare(VideoData videoData, VideoData videoData2) {
