@@ -88,6 +88,7 @@ public class MainActivity extends Activity implements UploadsListFragment.Callba
     private static final int RESULT_VIDEO_CAP = 5;
     static final String INVALIDATE_TOKEN_INTENT = "com.google.ytdl.invalidate";
     public static final String ACCOUNT_KEY = "accountName";
+    public static final String MESSAGE_KEY = "message";
     public static final String YOUTUBE_WATCH_URL_PREFIX = "http://www.youtube.com/watch?v=";
 
     private ImageFetcher mImageFetcher;
@@ -578,6 +579,8 @@ public class MainActivity extends Activity implements UploadsListFragment.Callba
             if (intent.getAction().equals(INVALIDATE_TOKEN_INTENT)) {
                 Log.d(InvalidateTokenReceiver.class.getName(), "Invalidating token");
                // GoogleAuthUtil.invalidateToken(MainActivity.this, mToken);
+                Utils.showError(MainActivity.this, intent.getStringExtra(MESSAGE_KEY));
+                
             }
         }
     }

@@ -162,16 +162,21 @@ public class ResumableUpload {
             // Execute upload.
             Video returnedVideo = videoInsert.execute();
             videoId = returnedVideo.getId();
-          } catch (final GooglePlayServicesAvailabilityIOException availabilityException) {
+//          } catch (final GooglePlayServicesAvailabilityIOException availabilityException) {
 //            showGooglePlayServicesAvailabilityErrorDialog(
 //                availabilityException.getConnectionStatusCode());
-          } catch (UserRecoverableAuthIOException userRecoverableException) {
+//          } catch (UserRecoverableAuthIOException userRecoverableException) {
 //            startActivityForResult(
 //                userRecoverableException.getIntent(), REQUEST_AUTHORIZATION);
           } catch (IOException e) {
+              mBuilder.setContentTitle("YouTube Upload Failed")
+              .setContentText("Please try again");
+              mNotifyManager.notify(NOTIFICATION_ID, mBuilder.build());
               Log.e(ResumableUpload.class.getSimpleName(), e.getMessage());
               LocalBroadcastManager manager = LocalBroadcastManager.getInstance(context);
-              manager.sendBroadcast(new Intent(MainActivity.INVALIDATE_TOKEN_INTENT));
+              Intent invalidateTokenIntent = new Intent(MainActivity.INVALIDATE_TOKEN_INTENT);
+              invalidateTokenIntent.putExtra(MainActivity.MESSAGE_KEY, e.getMessage());
+              manager.sendBroadcast(invalidateTokenIntent);
           }
 
             return videoId;
