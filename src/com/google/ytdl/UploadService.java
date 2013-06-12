@@ -14,12 +14,13 @@
 
 package com.google.ytdl;
 
-import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
+import com.google.api.client.extensions.android.http.AndroidHttp;
+import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential;
 import com.google.api.client.http.HttpTransport;
-import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.JsonFactory;
-import com.google.api.client.json.jackson.JacksonFactory;
+import com.google.api.client.json.gson.GsonFactory;
 import com.google.api.services.youtube.YouTube;
+import com.google.api.services.youtube.YouTubeScopes;
 
 import android.app.IntentService;
 import android.content.Intent;
@@ -28,6 +29,7 @@ import android.util.Log;
 
 import java.io.FileNotFoundException;
 import java.io.InputStream;
+import java.util.Collections;
 
 /**
  * @author Ibrahim Ulukaya <ulukaya@google.com>
@@ -41,22 +43,25 @@ public class UploadService extends IntentService {
     }
 
     private Uri mFileUri;
-    private String mToken;
+    private String mChosenAccountName;
     private long mFileSize;
+    
+    GoogleAccountCredential credential;
+    final HttpTransport transport = AndroidHttp.newCompatibleTransport();
+    final JsonFactory jsonFactory = new GsonFactory();
 
     @Override
     protected void onHandleIntent(Intent intent) {
         mFileUri = intent.getData();
-        mToken = intent.getStringExtra("token");
+        mChosenAccountName = intent.getStringExtra(MainActivity.ACCOUNT_KEY);
         mFileSize = intent.getLongExtra("length", 0);
-        GoogleCredential credential = new GoogleCredential();
-        credential.setAccessToken(mToken);
 
-        HttpTransport httpTransport = new NetHttpTransport();
-        JsonFactory jsonFactory = new JacksonFactory();
+        credential =
+                GoogleAccountCredential.usingOAuth2(getApplicationContext(), Collections.singleton(YouTubeScopes.YOUTUBE));
+        credential.setSelectedAccountName(mChosenAccountName);
 
         YouTube youtube =
-                new YouTube.Builder(httpTransport, jsonFactory, credential).setApplicationName(
+                new YouTube.Builder(transport, jsonFactory, credential).setApplicationName(
                         Constants.APP_NAME).build();
 
         InputStream fileInputStream = null;

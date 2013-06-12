@@ -16,5 +16,5 @@ package com.google.ytdl;
 
 public class Auth {
     // Register an API key here: https://code.google.com/apis/console
-    public static final String KEY = "Replace with the Android API Key in your API console";
+    public static final String KEY = "AIzaSyAEks36Xz1EuzVozpF-bP4gUuZoUi9akbE";
 }

@@ -14,32 +14,12 @@
 
 package com.google.ytdl;
 
-import com.google.android.gms.auth.GoogleAuthException;
-import com.google.android.gms.auth.GoogleAuthUtil;
-import com.google.android.gms.auth.GooglePlayServicesAvailabilityException;
-import com.google.android.gms.auth.UserRecoverableAuthException;
-import com.google.android.gms.common.AccountPicker;
-import com.google.android.gms.common.ConnectionResult;
-import com.google.android.gms.common.GooglePlayServicesUtil;
-import com.google.android.gms.common.Scopes;
-import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
-import com.google.api.client.googleapis.json.GoogleJsonResponseException;
-import com.google.api.client.http.HttpTransport;
-import com.google.api.client.http.javanet.NetHttpTransport;
-import com.google.api.client.json.JsonFactory;
-import com.google.api.client.json.jackson.JacksonFactory;
-import com.google.api.services.plus.Plus;
-import com.google.api.services.plus.model.Person;
-import com.google.api.services.youtube.YouTube;
-import com.google.api.services.youtube.YouTubeScopes;
-import com.google.api.services.youtube.model.ChannelListResponse;
-import com.google.api.services.youtube.model.PlaylistItem;
-import com.google.api.services.youtube.model.PlaylistItemListResponse;
-import com.google.api.services.youtube.model.Video;
-import com.google.api.services.youtube.model.VideoListResponse;
-import com.google.common.collect.Lists;
-import com.google.ytdl.util.ImageFetcher;
-import com.google.ytdl.util.VideoData;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
 
 import android.accounts.AccountManager;
 import android.app.Activity;
@@ -64,21 +44,34 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
-import android.widget.Adapter;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
-import android.widget.Toast;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import com.google.android.gms.common.GooglePlayServicesUtil;
+import com.google.android.gms.common.Scopes;
+import com.google.api.client.extensions.android.http.AndroidHttp;
+import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential;
+import com.google.api.client.googleapis.extensions.android.gms.auth.GooglePlayServicesAvailabilityIOException;
+import com.google.api.client.googleapis.extensions.android.gms.auth.UserRecoverableAuthIOException;
+import com.google.api.client.http.HttpTransport;
+import com.google.api.client.json.JsonFactory;
+import com.google.api.client.json.gson.GsonFactory;
+import com.google.api.client.util.ExponentialBackOff;
+import com.google.api.services.plus.Plus;
+import com.google.api.services.plus.model.Person;
+import com.google.api.services.youtube.YouTube;
+import com.google.api.services.youtube.YouTubeScopes;
+import com.google.api.services.youtube.model.ChannelListResponse;
+import com.google.api.services.youtube.model.PlaylistItem;
+import com.google.api.services.youtube.model.PlaylistItemListResponse;
+import com.google.api.services.youtube.model.Video;
+import com.google.api.services.youtube.model.VideoListResponse;
+import com.google.ytdl.util.ImageFetcher;
+import com.google.ytdl.util.Utils;
+import com.google.ytdl.util.VideoData;
 
 /**
  * @author Ibrahim Ulukaya <ulukaya@google.com>
@@ -87,14 +80,14 @@ import java.util.Map;
  */
 public class MainActivity extends Activity implements UploadsListFragment.Callbacks,
         DirectFragment.Callbacks {
+    private static final int REQUEST_GOOGLE_PLAY_SERVICES = 0;
     private static final int REQUEST_GMS_ERROR_DIALOG = 1;
-    private static final int REQUEST_PICK_ACCOUNT = 2;
-    private static final int REQUEST_AUTHENTICATE = 3;
+    private static final int REQUEST_ACCOUNT_PICKER = 2;
+    private static final int REQUEST_AUTHORIZATION = 3;
     private static final int RESULT_PICK_IMAGE_CROP = 4;
     private static final int RESULT_VIDEO_CAP = 5;
     static final String INVALIDATE_TOKEN_INTENT = "com.google.ytdl.invalidate";
-    public static final String ACCOUNT_KEY = "account";
-    public static final String TOKEN_KEY = "token";
+    public static final String ACCOUNT_KEY = "accountName";
     public static final String YOUTUBE_WATCH_URL_PREFIX = "http://www.youtube.com/watch?v=";
 
     private ImageFetcher mImageFetcher;
@@ -102,17 +95,19 @@ public class MainActivity extends Activity implements UploadsListFragment.Callba
     private InvalidateTokenReceiver invalidateTokenReceiver;
 
     private String mChosenAccountName;
-    private String mToken;
     private Uri mFileURI = null;
     private Handler mHandler = new Handler();
 
     private VideoData mVideoData;
 
-    private int mCurrentBackoff = 0;
     private Button mButton;
 
     private UploadsListFragment mUploadsListFragment;
     private DirectFragment mDirectFragment;
+    
+    GoogleAccountCredential credential;
+    final HttpTransport transport = AndroidHttp.newCompatibleTransport();
+    final JsonFactory jsonFactory = new GsonFactory();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -129,27 +124,21 @@ public class MainActivity extends Activity implements UploadsListFragment.Callba
             ensureFetcher();
             mButton = (Button) findViewById(R.id.upload_button);
             mButton.setEnabled(false);
-
-            int errorCode = GooglePlayServicesUtil.isGooglePlayServicesAvailable(this);
-            if (errorCode != ConnectionResult.SUCCESS) {
-                if (GooglePlayServicesUtil.isUserRecoverableError(errorCode)) {
-                    Dialog errorDialog =
-                            GooglePlayServicesUtil.getErrorDialog(errorCode, this, REQUEST_GMS_ERROR_DIALOG);
-                    if (errorDialog != null) {
-                        errorDialog.show();
-                    }
-                } else {
-                    Toast.makeText(this, R.string.google_play_not_available, Toast.LENGTH_SHORT).show();
-                    finish();
-                }
-            }
-
+            
+            credential =
+                    GoogleAccountCredential.usingOAuth2(getApplicationContext(), Arrays.asList(Scopes.PLUS_PROFILE, YouTubeScopes.YOUTUBE));
+            // set exponential backoff policy
+            credential.setBackOff(new ExponentialBackOff());
+            
+            //TODO check to remove
             if (savedInstanceState != null) {
-                mToken = savedInstanceState.getString(TOKEN_KEY);
                 mChosenAccountName = savedInstanceState.getString(ACCOUNT_KEY);
             } else {
                 loadAccount();
             }
+            
+            credential.setSelectedAccountName(mChosenAccountName);
+
 
             mHandler.post(new Runnable() {
                 @Override
@@ -250,6 +239,9 @@ public class MainActivity extends Activity implements UploadsListFragment.Callba
         if (invalidateTokenReceiver == null) invalidateTokenReceiver = new InvalidateTokenReceiver();
         IntentFilter intentFilter = new IntentFilter(INVALIDATE_TOKEN_INTENT);
         LocalBroadcastManager.getInstance(this).registerReceiver(invalidateTokenReceiver, intentFilter);
+        if (checkGooglePlayServicesAvailable()) {
+            haveGooglePlayServices();
+          }
     }
 
     private void ensureFetcher() {
@@ -263,17 +255,16 @@ public class MainActivity extends Activity implements UploadsListFragment.Callba
     private void loadAccount() {
         SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(this);
         mChosenAccountName = sp.getString(ACCOUNT_KEY, null);
-        mToken = sp.getString(TOKEN_KEY, null);
         invalidateOptionsMenu();
     }
 
     private void saveAccount() {
         SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(this);
-        sp.edit().putString(ACCOUNT_KEY, mChosenAccountName).putString(TOKEN_KEY, mToken).commit();
+        sp.edit().putString(ACCOUNT_KEY, mChosenAccountName).commit();
     }
 
     private void loadData() {
-        if (mToken == null) {
+        if (mChosenAccountName == null) {
             return;
         }
 
@@ -296,9 +287,9 @@ public class MainActivity extends Activity implements UploadsListFragment.Callba
     public boolean onCreateOptionsMenu(Menu menu) {
         super.onCreateOptionsMenu(menu);
         getMenuInflater().inflate(R.menu.activity_main, menu);
-        menu.findItem(R.id.action_sign_in).setVisible(mToken == null);
-        menu.findItem(R.id.action_refresh).setVisible(mToken != null);
-        menu.findItem(R.id.action_sign_out).setVisible(mToken != null);
+        menu.findItem(R.id.action_sign_in).setVisible(mChosenAccountName == null);
+        menu.findItem(R.id.action_refresh).setVisible(mChosenAccountName != null);
+        menu.findItem(R.id.action_sign_out).setVisible(mChosenAccountName != null);
         return true;
     }
 
@@ -306,13 +297,12 @@ public class MainActivity extends Activity implements UploadsListFragment.Callba
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
         if (id == R.id.action_sign_in) {
-            authenticate();
+            chooseAccount();
             return true;
         } else if (id == R.id.action_refresh) {
             loadData();
             return true;
         } else if (id == R.id.action_sign_out) {
-            mToken = null;
             mChosenAccountName = null;
             mUploadsListFragment.setVideos(new ArrayList<VideoData>());
             mUploadsListFragment.setProfileInfo(null);
@@ -330,156 +320,86 @@ public class MainActivity extends Activity implements UploadsListFragment.Callba
         return super.onOptionsItemSelected(item);
     }
 
-    public void authenticate() {
-        Intent accountChooserIntent =
-                AccountPicker.newChooseAccountIntent(null, null,
-                        new String[]{GoogleAuthUtil.GOOGLE_ACCOUNT_TYPE}, true, "Can haz token plz?", null,
-                        null, null);
-        startActivityForResult(accountChooserIntent, REQUEST_PICK_ACCOUNT);
-    }
-
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        switch (requestCode) {
-            case REQUEST_GMS_ERROR_DIALOG:
-                break;
-
-            case REQUEST_PICK_ACCOUNT:
-                if (resultCode == RESULT_OK) {
-                    mChosenAccountName = data.getStringExtra(AccountManager.KEY_ACCOUNT_NAME);
-                    tryAuthenticate();
-                } else {
-                    // TODO
-                }
-                break;
-
-            case REQUEST_AUTHENTICATE:
-                if (resultCode == RESULT_OK) {
-                    tryAuthenticate();
-                }
-                setProgressBarIndeterminateVisibility(false);
-                break;
-
-            case RESULT_PICK_IMAGE_CROP:
-                if (resultCode == RESULT_OK) {
-                    mFileURI = data.getData();
-                    mVideoData = null; // TODO
-                }
-                break;
-
-            case RESULT_VIDEO_CAP:
-                if (resultCode == RESULT_OK) {
-                    mFileURI = data.getData();
-                    mVideoData = null; // TODO
-                }
-                break;
-        }
         super.onActivityResult(requestCode, resultCode, data);
+        switch (requestCode) {
+        case REQUEST_GMS_ERROR_DIALOG:
+            break;
+        case RESULT_PICK_IMAGE_CROP:
+            if (resultCode == RESULT_OK) {
+                mFileURI = data.getData();
+                mVideoData = null; // TODO
+            }
+            break;
+
+        case RESULT_VIDEO_CAP:
+            if (resultCode == RESULT_OK) {
+                mFileURI = data.getData();
+                mVideoData = null; // TODO
+            }
+            break;
+          case REQUEST_GOOGLE_PLAY_SERVICES:
+            if (resultCode == Activity.RESULT_OK) {
+              haveGooglePlayServices();
+            } else {
+              checkGooglePlayServicesAvailable();
+            }
+            break;
+          case REQUEST_AUTHORIZATION:
+            if (resultCode == Activity.RESULT_OK) {
+                // load data
+                loadData();
+            } else {
+              chooseAccount();
+            }
+            break;
+          case REQUEST_ACCOUNT_PICKER:
+            if (resultCode == Activity.RESULT_OK && data != null && data.getExtras() != null) {
+              String accountName = data.getExtras().getString(AccountManager.KEY_ACCOUNT_NAME);
+              if (accountName != null) {
+                mChosenAccountName = accountName;
+                credential.setSelectedAccountName(accountName);
+                SharedPreferences settings = getPreferences(Context.MODE_PRIVATE);
+                SharedPreferences.Editor editor = settings.edit();
+                editor.putString(ACCOUNT_KEY, accountName);
+                editor.commit();
+                // load data
+                loadData();
+              }
+            }
+            break;
+        }
     }
 
     @Override
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
         outState.putString(ACCOUNT_KEY, mChosenAccountName);
-        outState.putString(TOKEN_KEY, mToken);
-    }
-
-    private void tryAuthenticate() {
-        if (isFinishing()) {
-            return;
-        }
-
-        mToken = null;
-        setProgressBarIndeterminateVisibility(true);
-        AsyncTask<Void, Void, Boolean> task = new AsyncTask<Void, Void, Boolean>() {
-            @Override
-            protected Boolean doInBackground(Void... params) {
-                try {
-                    // Retrieve a token for the given account and scope. It will
-                    // always return either
-                    // a non-empty String or throw an exception.
-                    mToken =
-                            GoogleAuthUtil.getToken(MainActivity.this, mChosenAccountName, "oauth2:"
-                                    + Scopes.PLUS_PROFILE + " " + YouTubeScopes.YOUTUBE + " "
-                                    + YouTubeScopes.YOUTUBE_UPLOAD);
-                } catch (GooglePlayServicesAvailabilityException playEx) {
-                    GooglePlayServicesUtil.getErrorDialog(playEx.getConnectionStatusCode(),
-                            MainActivity.this, REQUEST_GMS_ERROR_DIALOG).show();
-                } catch (UserRecoverableAuthException userAuthEx) {
-                    // Start the user recoverable action using the intent
-                    // returned by
-                    // getIntent()
-                    startActivityForResult(userAuthEx.getIntent(), REQUEST_AUTHENTICATE);
-                    return false;
-                } catch (IOException transientEx) {
-                    // TODO: backoff
-                    Log.e(this.getClass().getSimpleName(), transientEx.getMessage());
-                } catch (GoogleAuthException authEx) {
-                    Log.e(this.getClass().getSimpleName(), authEx.getMessage());
-                }
-                return true;
-            }
-
-            @Override
-            protected void onPostExecute(Boolean hideProgressBar) {
-                invalidateOptionsMenu();
-
-                if (hideProgressBar) {
-                    setProgressBarIndeterminateVisibility(false);
-                }
-
-                if (mToken != null) {
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            saveAccount();
-                        }
-                    });
-                }
-                loadData();
-            }
-        };
-        task.execute((Void) null);
+        //outState.putString(TOKEN_KEY, mToken);
     }
 
     private void loadProfile() {
         new AsyncTask<Void, Void, Person>() {
             @Override
             protected Person doInBackground(Void... voids) {
-                GoogleCredential credential = new GoogleCredential();
-                credential.setAccessToken(mToken);
-
-                HttpTransport httpTransport = new NetHttpTransport();
-                JsonFactory jsonFactory = new JacksonFactory();
-
                 Plus plus =
-                        new Plus.Builder(httpTransport, jsonFactory, credential).setApplicationName(
+                        new Plus.Builder(transport, jsonFactory, credential).setApplicationName(
                                 Constants.APP_NAME).build();
 
                 try {
                     return plus.people().get("me").execute();
-
-                } catch (final GoogleJsonResponseException e) {
-                    if (401 == e.getDetails().getCode()) {
-                        Log.e(this.getClass().getSimpleName(), e.getMessage());
-                        GoogleAuthUtil.invalidateToken(MainActivity.this, mToken);
-                        mHandler.postDelayed(new Runnable() {
-                            @Override
-                            public void run() {
-                                tryAuthenticate();
-                            }
-                        }, mCurrentBackoff * 1000);
-
-                        mCurrentBackoff *= 2;
-                        if (mCurrentBackoff == 0) {
-                            mCurrentBackoff = 1;
-                        }
-                    }
-
-                } catch (final IOException e) {
-                    Log.e(this.getClass().getSimpleName(), e.getMessage());
-                }
-                return null;
+                } catch (final GooglePlayServicesAvailabilityIOException availabilityException) {
+                    showGooglePlayServicesAvailabilityErrorDialog(
+                        availabilityException.getConnectionStatusCode());
+                  } catch (UserRecoverableAuthIOException userRecoverableException) {
+                    startActivityForResult(
+                        userRecoverableException.getIntent(), REQUEST_AUTHORIZATION);
+                  } catch (IOException e) {
+                    Utils.logAndShow(MainActivity.this, Constants.APP_NAME, e);
+                  }
+                  return null;
+                
             }
 
             @Override
@@ -491,7 +411,7 @@ public class MainActivity extends Activity implements UploadsListFragment.Callba
     }
 
     private void loadUploadedVideos() {
-        if (mToken == null) {
+        if (mChosenAccountName == null) {
             return;
         }
 
@@ -499,15 +419,12 @@ public class MainActivity extends Activity implements UploadsListFragment.Callba
         new AsyncTask<Void, Void, List<VideoData>>() {
             @Override
             protected List<VideoData> doInBackground(Void... voids) {
-                GoogleCredential credential = new GoogleCredential();
-                credential.setAccessToken(mToken);
+                credential =
+                        GoogleAccountCredential.usingOAuth2(getApplicationContext(), Collections.singleton(YouTubeScopes.YOUTUBE));
+                credential.setSelectedAccountName(mChosenAccountName);
 
-                HttpTransport httpTransport = new NetHttpTransport();
-                JsonFactory jsonFactory = new JacksonFactory();
-                
-                // YouTube object used to make all API requests.
-                YouTube yt =
-                        new YouTube.Builder(httpTransport, jsonFactory, credential).setApplicationName(
+                YouTube youtube =
+                        new YouTube.Builder(transport, jsonFactory, credential).setApplicationName(
                                 Constants.APP_NAME).build();
 
                 try {
@@ -516,7 +433,7 @@ public class MainActivity extends Activity implements UploadsListFragment.Callba
                      * authenticated user's channel. Returned with that data is the playlist id for the uploaded
                      * videos. https://developers.google.com/youtube/v3/docs/channels/list
                      */
-                    ChannelListResponse clr = yt.channels().list("contentDetails").setMine(true).execute();
+                    ChannelListResponse clr = youtube.channels().list("contentDetails").setMine(true).execute();
                     
                     // Get the user's uploads playlist's id from channel list response
                     String uploadsPlaylistId =
@@ -526,7 +443,7 @@ public class MainActivity extends Activity implements UploadsListFragment.Callba
                     
                     // Get videos from user's upload playlist with a playlist items list request
                     PlaylistItemListResponse pilr =
-                            yt.playlistItems().list("id,contentDetails").setPlaylistId(uploadsPlaylistId)
+                            youtube.playlistItems().list("id,contentDetails").setPlaylistId(uploadsPlaylistId)
                                     .setMaxResults(20l).execute();
                     List<String> videoIds = new ArrayList<String>();
                     
@@ -537,7 +454,7 @@ public class MainActivity extends Activity implements UploadsListFragment.Callba
                     
                     // Get details of uploaded videos with a videos list request.
                     VideoListResponse vlr =
-                            yt.videos().list(TextUtils.join(",", videoIds), "id,snippet,status").execute();
+                            youtube.videos().list("id,snippet,status").setId(TextUtils.join(",", videoIds)).execute();
 
                     // Add only the public videos to the local videos list.
                     for (Video video : vlr.getItems()) {
@@ -556,30 +473,18 @@ public class MainActivity extends Activity implements UploadsListFragment.Callba
                         }
                     });
 
-                    mCurrentBackoff = 0;
                     return videos;
 
-                } catch (final GoogleJsonResponseException e) {
-                    if (401 == e.getDetails().getCode()) {
-                        Log.e(this.getClass().getSimpleName(), e.getMessage());
-                        GoogleAuthUtil.invalidateToken(MainActivity.this, mToken);
-                        mHandler.postDelayed(new Runnable() {
-                            @Override
-                            public void run() {
-                                tryAuthenticate();
-                            }
-                        }, mCurrentBackoff * 1000);
-
-                        mCurrentBackoff *= 2;
-                        if (mCurrentBackoff == 0) {
-                            mCurrentBackoff = 1;
-                        }
-                    }
-
-                } catch (final IOException e) {
-                    Log.e(this.getClass().getSimpleName(), e.getMessage());
-                }
-                return null;
+                } catch (final GooglePlayServicesAvailabilityIOException availabilityException) {
+                    showGooglePlayServicesAvailabilityErrorDialog(
+                        availabilityException.getConnectionStatusCode());
+                  } catch (UserRecoverableAuthIOException userRecoverableException) {
+                    startActivityForResult(
+                        userRecoverableException.getIntent(), REQUEST_AUTHORIZATION);
+                  } catch (IOException e) {
+                    Utils.logAndShow(MainActivity.this, Constants.APP_NAME, e);
+                  }
+                  return null;
             }
 
             @Override
@@ -632,12 +537,12 @@ public class MainActivity extends Activity implements UploadsListFragment.Callba
     }
 
     public void uploadVideo(View view) {
-        if (mToken == null) {
+        if (mChosenAccountName == null) {
             return;
         }
         // if an upload video is selected.
         if (mVideoData != null) {
-            mDirectFragment.directLite(mVideoData, mToken);
+           // mDirectFragment.directLite(mVideoData, mToken);
             mButton.setEnabled(false);
             return;
         }
@@ -646,30 +551,64 @@ public class MainActivity extends Activity implements UploadsListFragment.Callba
             Intent uploadIntent = new Intent(this, UploadService.class);
             uploadIntent.setData(mFileURI);
             uploadIntent.putExtra(ACCOUNT_KEY, mChosenAccountName);
-            uploadIntent.putExtra(TOKEN_KEY, mToken);
             startService(uploadIntent);
             mButton.setEnabled(false);
         }
     }
+    
+    void showGooglePlayServicesAvailabilityErrorDialog(final int connectionStatusCode) {
+        runOnUiThread(new Runnable() {
+          public void run() {
+            Dialog dialog =
+                GooglePlayServicesUtil.getErrorDialog(connectionStatusCode, MainActivity.this,
+                    REQUEST_GOOGLE_PLAY_SERVICES);
+            dialog.show();
+          }
+        });
+      }
+    /** Check that Google Play services APK is installed and up to date. */
+    private boolean checkGooglePlayServicesAvailable() {
+      final int connectionStatusCode = GooglePlayServicesUtil.isGooglePlayServicesAvailable(this);
+      if (GooglePlayServicesUtil.isUserRecoverableError(connectionStatusCode)) {
+        showGooglePlayServicesAvailabilityErrorDialog(connectionStatusCode);
+        return false;
+      }
+      return true;
+    }
 
+    private void haveGooglePlayServices() {
+      // check if there is already an account selected
+      if (credential.getSelectedAccountName() == null) {
+        // ask user to choose account
+        chooseAccount();
+      } else {
+        // load data
+        loadData();
+      }
+    }
+
+    private void chooseAccount() {
+      startActivityForResult(credential.newChooseAccountIntent(), REQUEST_ACCOUNT_PICKER);
+    }
     private class InvalidateTokenReceiver extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
             if (intent.getAction().equals(INVALIDATE_TOKEN_INTENT)) {
                 Log.d(InvalidateTokenReceiver.class.getName(), "Invalidating token");
-                GoogleAuthUtil.invalidateToken(MainActivity.this, mToken);
-                mHandler.postDelayed(new Runnable() {
-                    @Override
-                    public void run() {
-                        tryAuthenticate();
-                    }
-                }, mCurrentBackoff * 1000);
-
-                mCurrentBackoff *= 2;
-                if (mCurrentBackoff == 0) {
-                    mCurrentBackoff = 1;
-                }
+               // GoogleAuthUtil.invalidateToken(MainActivity.this, mToken);
+//                mHandler.postDelayed(new Runnable() {
+//                    @Override
+//                    public void run() {
+//                       // tryAuthenticate();
+//                    }
+//                }, mCurrentBackoff * 1000);
+//
+//                mCurrentBackoff *= 2;
+//                if (mCurrentBackoff == 0) {
+//                    mCurrentBackoff = 1;
+//                }
             }
         }
     }
+    
 }

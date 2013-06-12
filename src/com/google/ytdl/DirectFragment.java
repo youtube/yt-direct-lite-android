@@ -14,20 +14,8 @@
 
 package com.google.ytdl;
 
-import com.google.android.youtube.player.YouTubeInitializationResult;
-import com.google.android.youtube.player.YouTubePlayer;
-import com.google.android.youtube.player.YouTubePlayer.OnFullscreenListener;
-import com.google.android.youtube.player.YouTubePlayer.PlayerStateChangeListener;
-import com.google.android.youtube.player.YouTubePlayerFragment;
-import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
-import com.google.api.client.http.HttpTransport;
-import com.google.api.client.http.javanet.NetHttpTransport;
-import com.google.api.client.json.JsonFactory;
-import com.google.api.client.json.jackson.JacksonFactory;
-import com.google.api.services.youtube.YouTube;
-import com.google.ytdl.util.ImageFetcher;
-import com.google.ytdl.util.Upload;
-import com.google.ytdl.util.VideoData;
+import java.io.IOException;
+import java.util.Collections;
 
 import android.app.Activity;
 import android.app.Fragment;
@@ -40,7 +28,21 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Toast;
 
-import java.io.IOException;
+import com.google.android.youtube.player.YouTubeInitializationResult;
+import com.google.android.youtube.player.YouTubePlayer;
+import com.google.android.youtube.player.YouTubePlayer.OnFullscreenListener;
+import com.google.android.youtube.player.YouTubePlayer.PlayerStateChangeListener;
+import com.google.android.youtube.player.YouTubePlayerFragment;
+import com.google.api.client.extensions.android.http.AndroidHttp;
+import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential;
+import com.google.api.client.http.HttpTransport;
+import com.google.api.client.json.JsonFactory;
+import com.google.api.client.json.gson.GsonFactory;
+import com.google.api.services.youtube.YouTube;
+import com.google.api.services.youtube.YouTubeScopes;
+import com.google.ytdl.util.ImageFetcher;
+import com.google.ytdl.util.Upload;
+import com.google.ytdl.util.VideoData;
 
 
 /**
@@ -54,6 +56,9 @@ public class DirectFragment extends Fragment implements
     private YouTubePlayer mYouTubePlayer;
     private boolean mIsFullScreen = false;
     private static final String YOUTUBE_FRAGMENT_TAG = "youtube";
+    GoogleAccountCredential credential;
+    final HttpTransport transport = AndroidHttp.newCompatibleTransport();
+    final JsonFactory jsonFactory = new GsonFactory();
 
     public DirectFragment() {
     }
@@ -105,22 +110,20 @@ public class DirectFragment extends Fragment implements
 
     }
 
-    public void directLite(final VideoData video, final String token) {
+    public void directLite(final VideoData video, final String accountName) {
         video.addTag(Constants.DEFAULT_KEYWORD);
         video.addTag(Upload.generateKeywordFromPlaylistId(Constants.UPLOAD_PLAYLIST));
 
         new AsyncTask<Void, Void, Void>() {
             @Override
             protected Void doInBackground(Void... voids) {
-
-                GoogleCredential credential = new GoogleCredential();
-                credential.setAccessToken(token);
-
-                HttpTransport httpTransport = new NetHttpTransport();
-                JsonFactory jsonFactory = new JacksonFactory();
+                
+                credential =
+                        GoogleAccountCredential.usingOAuth2(getActivity(), Collections.singleton(YouTubeScopes.YOUTUBE));
+                credential.setSelectedAccountName(accountName);
 
                 YouTube youtube =
-                        new YouTube.Builder(httpTransport, jsonFactory, credential).setApplicationName(
+                        new YouTube.Builder(transport, jsonFactory, credential).setApplicationName(
                                 Constants.APP_NAME).build();
                 try {
                     youtube.videos().update("snippet", video.getVideo()).execute();
