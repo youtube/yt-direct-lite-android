@@ -133,13 +133,20 @@ public class MainActivity extends Activity implements UploadsListFragment.Callba
             SharedPreferences settings = getPreferences(Context.MODE_PRIVATE);
             credential.setSelectedAccountName(settings.getString(ACCOUNT_KEY, null));            
             //TODO check to remove
-//            if (savedInstanceState != null) {
-//                mChosenAccountName = savedInstanceState.getString(ACCOUNT_KEY);
-//            } else {
-//                loadAccount();
-//            }
+            if (savedInstanceState != null) {
+                mChosenAccountName = savedInstanceState.getString(ACCOUNT_KEY);
+            } else {
+                loadAccount();
+            }
             
-//            credential.setSelectedAccountName(mChosenAccountName);
+            credential.setSelectedAccountName(mChosenAccountName);
+
+            mHandler.post(new Runnable() {
+                @Override
+                public void run() {
+                    loadData();
+                }
+            });
 
             mUploadsListFragment =
                     (UploadsListFragment) getFragmentManager().findFragmentById(R.id.list_fragment);
