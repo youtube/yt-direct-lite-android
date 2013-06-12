@@ -14,15 +14,12 @@
 
 package com.google.ytdl;
 
-import com.google.api.client.googleapis.json.GoogleJsonResponseException;
-import com.google.api.client.googleapis.media.MediaHttpUploader;
-import com.google.api.client.googleapis.media.MediaHttpUploaderProgressListener;
-import com.google.api.client.http.InputStreamContent;
-import com.google.api.services.youtube.YouTube;
-import com.google.api.services.youtube.model.Video;
-import com.google.api.services.youtube.model.VideoSnippet;
-import com.google.api.services.youtube.model.VideoStatus;
-import com.google.ytdl.util.Upload;
+import java.io.BufferedInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.List;
 
 import android.app.NotificationManager;
 import android.content.Context;
@@ -31,12 +28,16 @@ import android.support.v4.app.NotificationCompat;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
-import java.io.BufferedInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.List;
+import com.google.api.client.googleapis.extensions.android.gms.auth.GooglePlayServicesAvailabilityIOException;
+import com.google.api.client.googleapis.extensions.android.gms.auth.UserRecoverableAuthIOException;
+import com.google.api.client.googleapis.media.MediaHttpUploader;
+import com.google.api.client.googleapis.media.MediaHttpUploaderProgressListener;
+import com.google.api.client.http.InputStreamContent;
+import com.google.api.services.youtube.YouTube;
+import com.google.api.services.youtube.model.Video;
+import com.google.api.services.youtube.model.VideoSnippet;
+import com.google.api.services.youtube.model.VideoStatus;
+import com.google.ytdl.util.Upload;
 
 
 /**
@@ -161,18 +162,18 @@ public class ResumableUpload {
             // Execute upload.
             Video returnedVideo = videoInsert.execute();
             videoId = returnedVideo.getId();
+          } catch (final GooglePlayServicesAvailabilityIOException availabilityException) {
+//            showGooglePlayServicesAvailabilityErrorDialog(
+//                availabilityException.getConnectionStatusCode());
+          } catch (UserRecoverableAuthIOException userRecoverableException) {
+//            startActivityForResult(
+//                userRecoverableException.getIntent(), REQUEST_AUTHORIZATION);
+          } catch (IOException e) {
+              Log.e(ResumableUpload.class.getSimpleName(), e.getMessage());
+              LocalBroadcastManager manager = LocalBroadcastManager.getInstance(context);
+              manager.sendBroadcast(new Intent(MainActivity.INVALIDATE_TOKEN_INTENT));
+          }
 
-        } catch (final GoogleJsonResponseException e) {
-            if (401 == e.getDetails().getCode()) {
-                Log.e(ResumableUpload.class.getSimpleName(), e.getMessage());
-                LocalBroadcastManager manager = LocalBroadcastManager.getInstance(context);
-                manager.sendBroadcast(new Intent(MainActivity.INVALIDATE_TOKEN_INTENT));
-            }
-        } catch (IOException e) {
-            Log.e("IOException", e.getMessage());
-        } catch (Throwable t) {
-            Log.e("Throwable", t.getMessage());
-        }
-        return videoId;
+            return videoId;
     }
 }

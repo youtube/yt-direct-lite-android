@@ -367,12 +367,6 @@ public class MainActivity extends Activity implements UploadsListFragment.Callba
         new AsyncTask<Void, Void, Person>() {
             @Override
             protected Person doInBackground(Void... voids) {
-//                credential =
-//                        GoogleAccountCredential.usingOAuth2(getApplicationContext(), Arrays.asList(Scopes.PLUS_PROFILE, YouTubeScopes.YOUTUBE));
-//                credential.setBackOff(new ExponentialBackOff());
-//                
-//                SharedPreferences settings = getPreferences(Context.MODE_PRIVATE);
-//                credential.setSelectedAccountName(settings.getString(ACCOUNT_KEY, null));   
                 
                 Plus plus =
                         new Plus.Builder(transport, jsonFactory, credential).setApplicationName(
@@ -544,7 +538,7 @@ public class MainActivity extends Activity implements UploadsListFragment.Callba
         }
     }
     
-    void showGooglePlayServicesAvailabilityErrorDialog(final int connectionStatusCode) {
+    public void showGooglePlayServicesAvailabilityErrorDialog(final int connectionStatusCode) {
         runOnUiThread(new Runnable() {
           public void run() {
             Dialog dialog =
@@ -584,17 +578,6 @@ public class MainActivity extends Activity implements UploadsListFragment.Callba
             if (intent.getAction().equals(INVALIDATE_TOKEN_INTENT)) {
                 Log.d(InvalidateTokenReceiver.class.getName(), "Invalidating token");
                // GoogleAuthUtil.invalidateToken(MainActivity.this, mToken);
-//                mHandler.postDelayed(new Runnable() {
-//                    @Override
-//                    public void run() {
-//                       // tryAuthenticate();
-//                    }
-//                }, mCurrentBackoff * 1000);
-//
-//                mCurrentBackoff *= 2;
-//                if (mCurrentBackoff == 0) {
-//                    mCurrentBackoff = 1;
-//                }
             }
         }
     }
