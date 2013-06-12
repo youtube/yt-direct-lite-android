@@ -17,4 +17,6 @@
     <string name="dev_setup_explanation">If you\'re seeing this screen, congratulations! You\'ve set up the dependencies for YouTube Direct Lite correctly. You just need to set up the following for the app to work correctly:</string>
     <string name="error">Error</string>
     <string name="error_format">[Error] %s</string>
+    <string name="refresh">Refresh</string>
+    <string name="accounts">Accounts</string>
 </resources>

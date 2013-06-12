@@ -130,22 +130,16 @@ public class MainActivity extends Activity implements UploadsListFragment.Callba
             // set exponential backoff policy
             credential.setBackOff(new ExponentialBackOff());
             
+            SharedPreferences settings = getPreferences(Context.MODE_PRIVATE);
+            credential.setSelectedAccountName(settings.getString(ACCOUNT_KEY, null));            
             //TODO check to remove
-            if (savedInstanceState != null) {
-                mChosenAccountName = savedInstanceState.getString(ACCOUNT_KEY);
-            } else {
-                loadAccount();
-            }
+//            if (savedInstanceState != null) {
+//                mChosenAccountName = savedInstanceState.getString(ACCOUNT_KEY);
+//            } else {
+//                loadAccount();
+//            }
             
-            credential.setSelectedAccountName(mChosenAccountName);
-
-
-            mHandler.post(new Runnable() {
-                @Override
-                public void run() {
-                    loadData();
-                }
-            });
+//            credential.setSelectedAccountName(mChosenAccountName);
 
             mUploadsListFragment =
                     (UploadsListFragment) getFragmentManager().findFragmentById(R.id.list_fragment);
@@ -287,37 +281,20 @@ public class MainActivity extends Activity implements UploadsListFragment.Callba
     public boolean onCreateOptionsMenu(Menu menu) {
         super.onCreateOptionsMenu(menu);
         getMenuInflater().inflate(R.menu.activity_main, menu);
-        menu.findItem(R.id.action_sign_in).setVisible(mChosenAccountName == null);
-        menu.findItem(R.id.action_refresh).setVisible(mChosenAccountName != null);
-        menu.findItem(R.id.action_sign_out).setVisible(mChosenAccountName != null);
-        return true;
+        return super.onCreateOptionsMenu(menu);
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        int id = item.getItemId();
-        if (id == R.id.action_sign_in) {
-            chooseAccount();
-            return true;
-        } else if (id == R.id.action_refresh) {
-            loadData();
-            return true;
-        } else if (id == R.id.action_sign_out) {
-            mChosenAccountName = null;
-            mUploadsListFragment.setVideos(new ArrayList<VideoData>());
-            mUploadsListFragment.setProfileInfo(null);
-            saveAccount();
-            invalidateOptionsMenu();
-            return true;
-        } else if (id == R.id.action_youtube) {
-            if (mVideoData != null) {
-                Intent intent = new Intent(Intent.ACTION_VIEW);
-                intent.setData(Uri.parse(YOUTUBE_WATCH_URL_PREFIX + mVideoData.getYouTubeId()));
-                startActivity(intent);
-            }
-            return true;
-        }
-        return super.onOptionsItemSelected(item);
+        switch (item.getItemId()) {
+        case R.id.menu_refresh:
+          loadData();
+          break;
+        case R.id.menu_accounts:
+          chooseAccount();
+          return true;
+      }
+      return super.onOptionsItemSelected(item);
     }
 
     @Override
@@ -383,6 +360,13 @@ public class MainActivity extends Activity implements UploadsListFragment.Callba
         new AsyncTask<Void, Void, Person>() {
             @Override
             protected Person doInBackground(Void... voids) {
+//                credential =
+//                        GoogleAccountCredential.usingOAuth2(getApplicationContext(), Arrays.asList(Scopes.PLUS_PROFILE, YouTubeScopes.YOUTUBE));
+//                credential.setBackOff(new ExponentialBackOff());
+//                
+//                SharedPreferences settings = getPreferences(Context.MODE_PRIVATE);
+//                credential.setSelectedAccountName(settings.getString(ACCOUNT_KEY, null));   
+                
                 Plus plus =
                         new Plus.Builder(transport, jsonFactory, credential).setApplicationName(
                                 Constants.APP_NAME).build();
@@ -419,9 +403,6 @@ public class MainActivity extends Activity implements UploadsListFragment.Callba
         new AsyncTask<Void, Void, List<VideoData>>() {
             @Override
             protected List<VideoData> doInBackground(Void... voids) {
-                credential =
-                        GoogleAccountCredential.usingOAuth2(getApplicationContext(), Collections.singleton(YouTubeScopes.YOUTUBE));
-                credential.setSelectedAccountName(mChosenAccountName);
 
                 YouTube youtube =
                         new YouTube.Builder(transport, jsonFactory, credential).setApplicationName(

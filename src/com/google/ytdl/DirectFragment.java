@@ -38,6 +38,7 @@ import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccoun
 import com.google.api.client.http.HttpTransport;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.gson.GsonFactory;
+import com.google.api.client.util.ExponentialBackOff;
 import com.google.api.services.youtube.YouTube;
 import com.google.api.services.youtube.YouTubeScopes;
 import com.google.ytdl.util.ImageFetcher;
@@ -121,7 +122,8 @@ public class DirectFragment extends Fragment implements
                 credential =
                         GoogleAccountCredential.usingOAuth2(getActivity(), Collections.singleton(YouTubeScopes.YOUTUBE));
                 credential.setSelectedAccountName(accountName);
-
+                credential.setBackOff(new ExponentialBackOff());
+                
                 YouTube youtube =
                         new YouTube.Builder(transport, jsonFactory, credential).setApplicationName(
                                 Constants.APP_NAME).build();
