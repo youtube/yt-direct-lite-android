@@ -22,3 +22,8 @@ local.properties
 # IntelliJ IDEA
 .idea
 *.iml
+
+# Gradle related files
+.gradle/
+build/
+
