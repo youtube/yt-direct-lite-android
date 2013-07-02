@@ -162,23 +162,29 @@ public class ResumableUpload {
             // Execute upload.
             Video returnedVideo = videoInsert.execute();
             videoId = returnedVideo.getId();
-//          } catch (final GooglePlayServicesAvailabilityIOException availabilityException) {
+          } catch (final GooglePlayServicesAvailabilityIOException availabilityException) {
 //            showGooglePlayServicesAvailabilityErrorDialog(
 //                availabilityException.getConnectionStatusCode());
-//          } catch (UserRecoverableAuthIOException userRecoverableException) {
+        	  notifyFailedUpload(context, context.getString(R.string.cant_access_play), mNotifyManager, mBuilder);
+          } catch (UserRecoverableAuthIOException userRecoverableException) {
+        	  notifyFailedUpload(context, context.getString(R.string.reauth_required), mNotifyManager, mBuilder);
 //            startActivityForResult(
 //                userRecoverableException.getIntent(), REQUEST_AUTHORIZATION);
           } catch (IOException e) {
-              mBuilder.setContentTitle(context.getString(R.string.yt_upload_failed))
-              .setContentText("Please try again");
-              mNotifyManager.notify(NOTIFICATION_ID, mBuilder.build());
-              Log.e(ResumableUpload.class.getSimpleName(), e.getMessage());
-              LocalBroadcastManager manager = LocalBroadcastManager.getInstance(context);
-              Intent invalidateTokenIntent = new Intent(MainActivity.INVALIDATE_TOKEN_INTENT);
-              invalidateTokenIntent.putExtra(MainActivity.MESSAGE_KEY, e.getMessage());
-              manager.sendBroadcast(invalidateTokenIntent);
+        	  notifyFailedUpload(context, context.getString(R.string.please_try_again), mNotifyManager, mBuilder);
           }
 
             return videoId;
+    }
+    
+    private static void notifyFailedUpload(Context context, String message, NotificationManager mNotifyManager, NotificationCompat.Builder mBuilder){
+        mBuilder.setContentTitle(context.getString(R.string.yt_upload_failed))
+        .setContentText(message);
+        mNotifyManager.notify(NOTIFICATION_ID, mBuilder.build());
+        Log.e(ResumableUpload.class.getSimpleName(), message);
+        LocalBroadcastManager manager = LocalBroadcastManager.getInstance(context);
+        Intent invalidateTokenIntent = new Intent(MainActivity.INVALIDATE_TOKEN_INTENT);
+        invalidateTokenIntent.putExtra(MainActivity.MESSAGE_KEY, message);
+        manager.sendBroadcast(invalidateTokenIntent);
     }
 }
