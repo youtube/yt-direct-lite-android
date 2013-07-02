@@ -60,7 +60,7 @@ public class ResumableUpload {
      */
 
     public static String upload(YouTube youtube, final InputStream fileInputStream,
-                                final long fileSize, Context context) {
+                                final long fileSize, final Context context) {
         final NotificationManager mNotifyManager =
                 (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
         final NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(context);
@@ -129,30 +129,30 @@ public class ResumableUpload {
                 public void progressChanged(MediaHttpUploader uploader) throws IOException {
                     switch (uploader.getUploadState()) {
                         case INITIATION_STARTED:
-                            mBuilder.setContentText("Initiation Started").setProgress((int) fileSize,
+                            mBuilder.setContentText(context.getString(R.string.initiation_started)).setProgress((int) fileSize,
                                     (int) uploader.getNumBytesUploaded(), false);
                             mNotifyManager.notify(NOTIFICATION_ID, mBuilder.build());
                             break;
                         case INITIATION_COMPLETE:
-                            mBuilder.setContentText("Initiation Completed").setProgress((int) fileSize,
+                            mBuilder.setContentText(context.getString(R.string.initiation_completed)).setProgress((int) fileSize,
                                     (int) uploader.getNumBytesUploaded(), false);
                             mNotifyManager.notify(NOTIFICATION_ID, mBuilder.build());
                             break;
                         case MEDIA_IN_PROGRESS:
                             mBuilder
                                     .setContentTitle("YouTube Upload " + (int) (uploader.getProgress() * 100) + "%")
-                                    .setContentText("Direct Lite upload in progress")
+                                    .setContentText(context.getString(R.string.upload_in_progress))
                                     .setProgress((int) fileSize, (int) uploader.getNumBytesUploaded(), false);
                             mNotifyManager.notify(NOTIFICATION_ID, mBuilder.build());
                             break;
                         case MEDIA_COMPLETE:
-                            mBuilder.setContentTitle("YouTube Upload Completed")
-                                    .setContentText("Upload complete")
+                            mBuilder.setContentTitle(context.getString(R.string.yt_upload_completed))
+                                    .setContentText(context.getString(R.string.upload_completed))
                                             // Removes the progress bar
                                     .setProgress(0, 0, false);
                             mNotifyManager.notify(NOTIFICATION_ID, mBuilder.build());
                         case NOT_STARTED:
-                            Log.d(this.getClass().getSimpleName(), "Upload Not Started!");
+                            Log.d(this.getClass().getSimpleName(), context.getString(R.string.upload_not_started));
                             break;
                     }
                 }
@@ -169,7 +169,7 @@ public class ResumableUpload {
 //            startActivityForResult(
 //                userRecoverableException.getIntent(), REQUEST_AUTHORIZATION);
           } catch (IOException e) {
-              mBuilder.setContentTitle("YouTube Upload Failed")
+              mBuilder.setContentTitle(context.getString(R.string.yt_upload_failed))
               .setContentText("Please try again");
               mNotifyManager.notify(NOTIFICATION_ID, mBuilder.build());
               Log.e(ResumableUpload.class.getSimpleName(), e.getMessage());
