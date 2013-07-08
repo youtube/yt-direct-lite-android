@@ -142,13 +142,6 @@ public class MainActivity extends Activity implements UploadsListFragment.Callba
             
             credential.setSelectedAccountName(mChosenAccountName);
 
-            mHandler.post(new Runnable() {
-                @Override
-                public void run() {
-                    loadData();
-                }
-            });
-
             mUploadsListFragment =
                     (UploadsListFragment) getFragmentManager().findFragmentById(R.id.list_fragment);
             mDirectFragment = (DirectFragment) getFragmentManager().findFragmentById(R.id.direct_fragment);
