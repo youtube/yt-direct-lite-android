@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="thumbnail_width">96dp</dimen>
+    <dimen name="photo_height">400dp</dimen>
+    <dimen name="list_item_vert_margin">16dp</dimen>
+    <dimen name="detail_horiz_margin">80dp</dimen>
+</resources>
