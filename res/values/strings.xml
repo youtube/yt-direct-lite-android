@@ -26,7 +26,7 @@
     <string name="upload_completed">Upload completed</string>
     <string name="upload_not_started">Upload Not Started!</string>
     <string name="yt_upload_failed">YouTube Upload Failed</string>
-    <string name="reauth_required">Reauthorization is required</string>
+    <string name="reauth_required">Re-login required</string>
     <string name="please_try_again">Please try again</string>
     <string name="cant_access_play">Can\'t access to Google Play services</string>
 </resources>
