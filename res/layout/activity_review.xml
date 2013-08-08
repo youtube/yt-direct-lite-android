@@ -9,29 +9,33 @@
     android:paddingTop="@dimen/activity_vertical_margin"
     tools:context=".ReviewActivity" >
 
-    <TextView
-        android:id="@+id/textView"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/send" />
-
     <VideoView
         android:id="@+id/videoView"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
+        android:layout_height="0dp"
+        android:layout_weight="1" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="#eee" >
 
         <Button
             android:id="@+id/upload_button"
-            android:layout_width="match_parent"
-            android:textAppearance="?android:textAppearanceLarge"
-            android:fontFamily="sans-serif-condensed"
-    android:textStyle="bold"
-    android:ellipsize="end"
-    android:maxLines="2"
-    android:padding="8dp"
-            android:drawableLeft="@drawable/upload"
+            style="?android:attr/borderlessButtonStyle"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
+                        android:layout_weight="1"
+            android:drawableLeft="@drawable/upload"
+            android:ellipsize="end"
+            android:fontFamily="sans-serif-condensed"
             android:hint="@string/button_ytdl"
-            android:onClick="uploadVideo" />
- 
+            android:maxLines="2"
+            android:onClick="uploadVideo"
+            android:padding="8dp"
+            android:textAppearance="?android:textAppearanceLarge"
+            android:textStyle="bold" />
+        
+        </LinearLayout>
+
 </LinearLayout>
