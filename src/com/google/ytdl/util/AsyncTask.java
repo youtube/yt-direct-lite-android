@@ -16,11 +16,6 @@
 
 package com.google.ytdl.util;
 
-import android.annotation.TargetApi;
-import android.os.Handler;
-import android.os.Message;
-import android.os.Process;
-
 import java.util.ArrayDeque;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.Callable;
@@ -36,6 +31,11 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+
+import android.annotation.TargetApi;
+import android.os.Handler;
+import android.os.Message;
+import android.os.Process;
 
 
 /**

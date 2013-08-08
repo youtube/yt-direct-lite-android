@@ -14,6 +14,8 @@
 
 package com.google.ytdl.util;
 
+import android.util.Log;
+
 import com.google.ytdl.Constants;
 
 public class Upload {
@@ -22,11 +24,12 @@ public class Upload {
         if (playlistId.indexOf("PL") == 0) {
             playlistId = playlistId.substring(2);
         }
-
+        playlistId = playlistId.replaceAll("\\W", "");
         String keyword = Constants.DEFAULT_KEYWORD.concat(playlistId);
         if (keyword.length() > Constants.MAX_KEYWORD_LENGTH) {
             keyword = keyword.substring(0, Constants.MAX_KEYWORD_LENGTH);
         }
+        Log.e("replace",keyword);
         return keyword;
     }
 

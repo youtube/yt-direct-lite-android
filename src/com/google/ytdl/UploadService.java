@@ -14,6 +14,11 @@
 
 package com.google.ytdl;
 
+import android.app.IntentService;
+import android.content.Intent;
+import android.net.Uri;
+import android.util.Log;
+
 import com.google.api.client.extensions.android.http.AndroidHttp;
 import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential;
 import com.google.api.client.http.HttpTransport;
@@ -23,12 +28,8 @@ import com.google.api.client.util.ExponentialBackOff;
 import com.google.api.services.youtube.YouTube;
 import com.google.api.services.youtube.YouTubeScopes;
 
-import android.app.IntentService;
-import android.content.Intent;
-import android.net.Uri;
-import android.util.Log;
-
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collections;
 
@@ -39,41 +40,148 @@ import java.util.Collections;
  */
 public class UploadService extends IntentService {
 
+    /**
+     * defines how long we'll wait for a video to finish processing
+     */
+    private static final int PROCESSING_TIMEOUT_SEC = 60*20; // 20 minutes
+
+    /**
+     * controls how often to poll for video processing status
+     */
+    private static final int PROCESSING_POLL_INTERVAL_SEC = 60; 
+    /**
+     * how long to wait before re-trying the upload
+     */
+    private static final int UPLOAD_REATTEMPT_DELAY_SEC = 60;
+    /**
+     * processing start time
+     */
+    private static long mStartTime;
+    /**
+     * tracks the number of upload attempts
+     */
+    private int mUploadAttemptCount;
+
+
     public UploadService() {
         super("YTUploadService");
     }
 
-    private Uri mFileUri;
-    private String mChosenAccountName;
-    private long mFileSize;
-    
+    /**
+     * max number of retry attempts
+     */
+    private static final int MAX_RETRY = 3;
+    private static final String TAG = "UploadService";
+
+
     GoogleAccountCredential credential;
     final HttpTransport transport = AndroidHttp.newCompatibleTransport();
     final JsonFactory jsonFactory = new GsonFactory();
 
     @Override
     protected void onHandleIntent(Intent intent) {
-        mFileUri = intent.getData();
-        mChosenAccountName = intent.getStringExtra(MainActivity.ACCOUNT_KEY);
-        mFileSize = intent.getLongExtra("length", 0);
+        Uri fileUri = intent.getData();
+        String chosenAccountName = intent.getStringExtra(MainActivity.ACCOUNT_KEY);
 
         credential =
                 GoogleAccountCredential.usingOAuth2(getApplicationContext(), Collections.singleton(YouTubeScopes.YOUTUBE));
-        credential.setSelectedAccountName(mChosenAccountName);
+        credential.setSelectedAccountName(chosenAccountName);
         credential.setBackOff(new ExponentialBackOff());
 
-        YouTube youtube =
+        String appName = getResources().getString(R.string.app_name);
+        final YouTube youtube =
                 new YouTube.Builder(transport, jsonFactory, credential).setApplicationName(
-                        Constants.APP_NAME).build();
+                        appName).build();
 
-        InputStream fileInputStream = null;
+
         try {
-            mFileSize = getContentResolver().openFileDescriptor(mFileUri, "r").getStatSize();
+            tryUploadAndShowSelectableNotification(fileUri, youtube);
+        } catch (InterruptedException e) {
+            // ignore
+        }
+    }
+
+    private void tryUploadAndShowSelectableNotification(final Uri fileUri, final YouTube youtube) throws InterruptedException {
+        while (true) {
+            Log.i(TAG, String.format("Uploading [%s] to YouTube", fileUri.toString()));
+            String videoId = tryUpload(fileUri, youtube);
+            if (videoId!=null) {
+                Log.i(TAG, String.format("Uploaded video with ID: %s", videoId));
+                tryShowSelectableNotification(videoId, youtube);
+                return;
+            } else {
+                Log.e(TAG, String.format("Failed to upload %s", fileUri.toString()));
+                if (mUploadAttemptCount++ < MAX_RETRY) {
+                    Log.i(TAG, String.format("Will retry to upload the video ([%d] out of [%d] reattempts)",
+                            mUploadAttemptCount, MAX_RETRY));
+                    zzz(UPLOAD_REATTEMPT_DELAY_SEC * 1000);
+                } else {
+                    Log.e(TAG,String.format("Giving up on trying to upload %s after %d attempts",
+                            fileUri.toString(), mUploadAttemptCount));
+                    return;
+                }
+            }
+        }
+    }
+
+    private void tryShowSelectableNotification(final String videoId, final YouTube youtube)
+            throws InterruptedException {
+        mStartTime = System.currentTimeMillis();
+        boolean processed = false;
+        while (!processed) {
+            processed = ResumableUpload.checkIfProcessed(videoId, youtube);
+            if (!processed) {
+                // wait a while
+                Log.d(TAG,String.format("Video [%s] is not processed yet, will retry after [%d] seconds",
+                        videoId, PROCESSING_POLL_INTERVAL_SEC));
+                if (!timeoutExpired(mStartTime, PROCESSING_TIMEOUT_SEC)) {
+                    zzz(PROCESSING_POLL_INTERVAL_SEC * 1000);
+                } else {
+                    Log.d(TAG,String.format("Bailing out polling for processing status after [%d] seconds",
+                            PROCESSING_TIMEOUT_SEC));
+                    return;
+                }
+            } else {
+                ResumableUpload.showSelectableNotification(videoId, getApplicationContext());
+                return;
+            }
+        }
+    }
+
+    private static void zzz(int duration) throws InterruptedException {
+        Log.d(TAG,String.format("Sleeping for [%d] ms ...", duration));
+        Thread.sleep(duration);
+        Log.d(TAG,String.format("Sleeping for [%d] ms ... done", duration));
+    }
+
+    private String tryUpload(Uri mFileUri, YouTube youtube) {
+        long fileSize;
+        InputStream fileInputStream = null;
+        String videoId = null;
+        try {
+            fileSize = getContentResolver().openFileDescriptor(mFileUri, "r").getStatSize();
             fileInputStream = getContentResolver().openInputStream(mFileUri);
+            videoId = ResumableUpload.upload(youtube, fileInputStream, fileSize, getApplicationContext());
         } catch (FileNotFoundException e) {
             Log.e(getApplicationContext().toString(), e.getMessage());
+        } finally {
+            try {
+                fileInputStream.close();
+            } catch (IOException e) {
+                // ignore
+            }
         }
-        ResumableUpload.upload(youtube, fileInputStream, mFileSize, getApplicationContext());
-        
+        return videoId;
     }
+
+    private static boolean timeoutExpired(long startTime, int timeoutSeconds) {
+        long currTime = System.currentTimeMillis();
+        long elapsed = currTime - startTime;
+        if (elapsed>= timeoutSeconds * 1000) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
 }

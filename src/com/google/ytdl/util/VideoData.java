@@ -18,6 +18,7 @@ import com.google.api.services.youtube.model.Video;
 import com.google.api.services.youtube.model.VideoSnippet;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -44,13 +45,13 @@ public class VideoData {
         return mVideo.getSnippet().getTitle();
     }
 
-    public VideoSnippet addTag(String tag) {
+    public VideoSnippet addTags(Collection<? extends String> tags) {
         VideoSnippet mSnippet = mVideo.getSnippet();
         List<String> mTags = mSnippet.getTags();
         if (mTags == null) {
             mTags = new ArrayList<String>(2);
         }
-        mTags.add(tag);
+        mTags.addAll(tags);
         return mSnippet;
     }
 

@@ -14,14 +14,8 @@
 
 package com.google.ytdl;
 
-import java.io.BufferedInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.List;
-
 import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.support.v4.app.NotificationCompat;
@@ -35,9 +29,17 @@ import com.google.api.client.googleapis.media.MediaHttpUploaderProgressListener;
 import com.google.api.client.http.InputStreamContent;
 import com.google.api.services.youtube.YouTube;
 import com.google.api.services.youtube.model.Video;
+import com.google.api.services.youtube.model.VideoListResponse;
 import com.google.api.services.youtube.model.VideoSnippet;
 import com.google.api.services.youtube.model.VideoStatus;
 import com.google.ytdl.util.Upload;
+
+import java.io.BufferedInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Arrays;
+import java.util.Calendar;
+import java.util.List;
 
 
 /**
@@ -46,27 +48,39 @@ import com.google.ytdl.util.Upload;
  *         YouTube Resumable Upload controller class.
  */
 public class ResumableUpload {
-    private static int NOTIFICATION_ID = 1001;
+    private static int UPLOAD_NOTIFICATION_ID = 1001;
+    private static int PLAYBACK_NOTIFICATION_ID = 1002;
     /*
      * Global instance of the format used for the video being uploaded (MIME type).
      */
     private static String VIDEO_FILE_FORMAT = "video/*";
+    /**
+     * Assigned to the upload
+     */
+    public static final String[] DEFAULT_KEYWORDS = {"MultiSquash", "Game"};
 
+    /**
+     * Indicates that the video is fully processed, see https://www.googleapis.com/discovery/v1/apis/youtube/v3/rpc
+     */
+    private static final String SUCCEEDED = "succeeded";
+
+    private static final String TAG = "UploadingActivity";
     /**
      * Uploads user selected video in the project folder to the user's YouTube account using OAuth2
      * for authentication.
      *
-     * @param args command line args (not used).
      */
 
     public static String upload(YouTube youtube, final InputStream fileInputStream,
                                 final long fileSize, final Context context) {
-        final NotificationManager mNotifyManager =
+        final NotificationManager notifyManager =
                 (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
-        final NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(context);
-        mBuilder.setContentTitle(context.getString(R.string.youtube_upload))
-                .setContentText(context.getString(R.string.youtube_direct_lite_upload_started))
-                .setSmallIcon(R.drawable.icon);
+        final NotificationCompat.Builder builder = new NotificationCompat.Builder(context);
+        builder.setContentTitle(context.getString(R.string.youtube_upload))
+                .setContentText(context.getString(R.string.youtube_upload_started))
+                .setSmallIcon(R.drawable.ic_launcher);
+        notifyManager.notify(UPLOAD_NOTIFICATION_ID, builder.build());
+
         String videoId = null;
         try {
             // Add extra information to the video before uploading.
@@ -95,10 +109,7 @@ public class ResumableUpload {
                     + "on " + cal.getTime());
 
             // Set your keywords.
-            List<String> tags = new ArrayList<String>();
-            tags.add(Constants.DEFAULT_KEYWORD);
-            tags.add(Upload.generateKeywordFromPlaylistId(Constants.UPLOAD_PLAYLIST));
-            snippet.setTags(tags);
+            snippet.setTags(Arrays.asList(Constants.DEFAULT_KEYWORD, Upload.generateKeywordFromPlaylistId(Constants.UPLOAD_PLAYLIST)));
 
             // Set completed snippet to the video object.
             videoObjectDefiningMetadata.setSnippet(snippet);
@@ -129,28 +140,29 @@ public class ResumableUpload {
                 public void progressChanged(MediaHttpUploader uploader) throws IOException {
                     switch (uploader.getUploadState()) {
                         case INITIATION_STARTED:
-                            mBuilder.setContentText(context.getString(R.string.initiation_started)).setProgress((int) fileSize,
+                            builder.setContentText(context.getString(R.string.initiation_started)).setProgress((int) fileSize,
                                     (int) uploader.getNumBytesUploaded(), false);
-                            mNotifyManager.notify(NOTIFICATION_ID, mBuilder.build());
+                            notifyManager.notify(UPLOAD_NOTIFICATION_ID, builder.build());
                             break;
                         case INITIATION_COMPLETE:
-                            mBuilder.setContentText(context.getString(R.string.initiation_completed)).setProgress((int) fileSize,
+                            builder.setContentText(context.getString(R.string.initiation_completed)).setProgress((int) fileSize,
                                     (int) uploader.getNumBytesUploaded(), false);
-                            mNotifyManager.notify(NOTIFICATION_ID, mBuilder.build());
+                            notifyManager.notify(UPLOAD_NOTIFICATION_ID, builder.build());
                             break;
                         case MEDIA_IN_PROGRESS:
-                            mBuilder
-                                    .setContentTitle("YouTube Upload " + (int) (uploader.getProgress() * 100) + "%")
+                            builder
+                                    .setContentTitle(context.getString(R.string.youtube_upload) +
+                                            (int) (uploader.getProgress() * 100) + "%")
                                     .setContentText(context.getString(R.string.upload_in_progress))
                                     .setProgress((int) fileSize, (int) uploader.getNumBytesUploaded(), false);
-                            mNotifyManager.notify(NOTIFICATION_ID, mBuilder.build());
+                            notifyManager.notify(UPLOAD_NOTIFICATION_ID, builder.build());
                             break;
                         case MEDIA_COMPLETE:
-                            mBuilder.setContentTitle(context.getString(R.string.yt_upload_completed))
+                            builder.setContentTitle(context.getString(R.string.yt_upload_completed))
                                     .setContentText(context.getString(R.string.upload_completed))
                                             // Removes the progress bar
                                     .setProgress(0, 0, false);
-                            mNotifyManager.notify(NOTIFICATION_ID, mBuilder.build());
+                            notifyManager.notify(UPLOAD_NOTIFICATION_ID, builder.build());
                         case NOT_STARTED:
                             Log.d(this.getClass().getSimpleName(), context.getString(R.string.upload_not_started));
                             break;
@@ -161,30 +173,81 @@ public class ResumableUpload {
 
             // Execute upload.
             Video returnedVideo = videoInsert.execute();
+            Log.d(TAG, "Video upload completed");
             videoId = returnedVideo.getId();
+            Log.d(TAG, String.format("videoId = [%s]", videoId));
           } catch (final GooglePlayServicesAvailabilityIOException availabilityException) {
-//            showGooglePlayServicesAvailabilityErrorDialog(
-//                availabilityException.getConnectionStatusCode());
-        	  notifyFailedUpload(context, context.getString(R.string.cant_access_play), mNotifyManager, mBuilder);
+            Log.e(TAG, "GooglePlayServicesAvailabilityIOException", availabilityException);
+        	  notifyFailedUpload(context, context.getString(R.string.cant_access_play), notifyManager, builder);
           } catch (UserRecoverableAuthIOException userRecoverableException) {
-        	  notifyFailedUpload(context, context.getString(R.string.reauth_required), mNotifyManager, mBuilder);
-//            startActivityForResult(
-//                userRecoverableException.getIntent(), REQUEST_AUTHORIZATION);
+              Log.i(TAG, String.format("UserRecoverableAuthIOException: %s",
+                      userRecoverableException.getMessage()));
+              requestAuth(context, userRecoverableException);
           } catch (IOException e) {
-        	  notifyFailedUpload(context, context.getString(R.string.please_try_again), mNotifyManager, mBuilder);
+            Log.e(TAG, "IOException", e);
+        	  notifyFailedUpload(context, context.getString(R.string.please_try_again), notifyManager, builder);
           }
+        return videoId;
+    }
 
-            return videoId;
+    private static void requestAuth(Context context,
+                                    UserRecoverableAuthIOException userRecoverableException) {
+        LocalBroadcastManager manager = LocalBroadcastManager.getInstance(context);
+        Intent authIntent = userRecoverableException.getIntent();
+        Intent runReqAuthIntent = new Intent(MainActivity.REQUEST_AUTHORIZATION_INTENT);
+        runReqAuthIntent.putExtra(MainActivity.REQUEST_AUTHORIZATION_INTENT_PARAM, authIntent);
+        manager.sendBroadcast(runReqAuthIntent);
+        Log.d(TAG, String.format("Sent broadcast %s", MainActivity.REQUEST_AUTHORIZATION_INTENT));
     }
     
-    private static void notifyFailedUpload(Context context, String message, NotificationManager mNotifyManager, NotificationCompat.Builder mBuilder){
-        mBuilder.setContentTitle(context.getString(R.string.yt_upload_failed))
+    private static void notifyFailedUpload(Context context, String message, NotificationManager notifyManager,
+                                           NotificationCompat.Builder builder){
+        builder.setContentTitle(context.getString(R.string.yt_upload_failed))
         .setContentText(message);
-        mNotifyManager.notify(NOTIFICATION_ID, mBuilder.build());
+        notifyManager.notify(UPLOAD_NOTIFICATION_ID, builder.build());
         Log.e(ResumableUpload.class.getSimpleName(), message);
-        LocalBroadcastManager manager = LocalBroadcastManager.getInstance(context);
-        Intent invalidateTokenIntent = new Intent(MainActivity.INVALIDATE_TOKEN_INTENT);
-        invalidateTokenIntent.putExtra(MainActivity.MESSAGE_KEY, message);
-        manager.sendBroadcast(invalidateTokenIntent);
+    }
+
+    public static void showSelectableNotification(String videoId, Context context) {
+        Log.d(TAG, String.format("Posting selectable notification for video ID [%s]", videoId));
+        final NotificationManager notifyManager =
+                (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+        final NotificationCompat.Builder builder = new NotificationCompat.Builder(context);
+        Intent notificationIntent = new Intent(context, ReviewActivity.class);
+        notificationIntent.putExtra("videoId", videoId);
+        PendingIntent contentIntent = PendingIntent.getActivity(context,
+                0, notificationIntent, PendingIntent.FLAG_CANCEL_CURRENT);
+        builder.setContentTitle("Watch your video") // TODO - replace string constants
+                .setContentText("See the newly uploaded video").setContentIntent(contentIntent).setSmallIcon(R.drawable.ic_launcher);
+        notifyManager.notify(PLAYBACK_NOTIFICATION_ID, builder.build());
+        Log.d(TAG, String.format("Selectable notification for video ID [%s] posted", videoId));
+    }
+
+
+    /**
+     * @return true if the video is fully processed
+     */
+    public static boolean checkIfProcessed(String videoId, YouTube youtube) {
+        try {
+            YouTube.Videos.List list = youtube.videos().list("processingDetails");
+            list.setId(videoId);
+            VideoListResponse listResponse = list.execute();
+            List<Video> videos = listResponse.getItems();
+            if (videos.size()==1) {
+                Video video = videos.get(0);
+                String status = video.getProcessingDetails().getProcessingStatus();
+                Log.e(TAG, String.format("Processing status of [%s] is [%s]", videoId, status));
+                if (status.equals(SUCCEEDED)) {
+                    return true;
+                }
+            } else {
+                // can't find the video
+                Log.e(TAG, String.format("Can't find video with ID [%s]", videoId));
+                return false;
+            }
+        } catch (IOException e) {
+            Log.e(TAG,"Error fetching video metadata", e);
+        }
+        return false;
     }
 }

@@ -14,15 +14,10 @@
 
 package com.google.ytdl;
 
-import java.io.IOException;
-import java.util.Collections;
-
 import android.app.Activity;
 import android.app.Fragment;
 import android.app.FragmentTransaction;
-import android.os.AsyncTask;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -38,176 +33,182 @@ import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccoun
 import com.google.api.client.http.HttpTransport;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.gson.GsonFactory;
-import com.google.api.client.util.ExponentialBackOff;
-import com.google.api.services.youtube.YouTube;
-import com.google.api.services.youtube.YouTubeScopes;
 import com.google.ytdl.util.ImageFetcher;
-import com.google.ytdl.util.Upload;
 import com.google.ytdl.util.VideoData;
-
 
 /**
  * @author Ibrahim Ulukaya <ulukaya@google.com>
  *         <p/>
- *         Main fragment showing YouTube Direct Lite upload options and having YT Android Player.
+ *         Main fragment showing YouTube Direct Lite upload options and having
+ *         YT Android Player.
  */
 public class DirectFragment extends Fragment implements
-        PlayerStateChangeListener, OnFullscreenListener {
+		PlayerStateChangeListener, OnFullscreenListener {
 
-    private YouTubePlayer mYouTubePlayer;
-    private boolean mIsFullScreen = false;
-    private static final String YOUTUBE_FRAGMENT_TAG = "youtube";
-    GoogleAccountCredential credential;
-    final HttpTransport transport = AndroidHttp.newCompatibleTransport();
-    final JsonFactory jsonFactory = new GsonFactory();
+	private YouTubePlayer mYouTubePlayer;
+	private boolean mIsFullScreen = false;
+	private static final String YOUTUBE_FRAGMENT_TAG = "youtube";
+	GoogleAccountCredential credential;
+	final HttpTransport transport = AndroidHttp.newCompatibleTransport();
+	final JsonFactory jsonFactory = new GsonFactory();
 
-    public DirectFragment() {
-    }
+	public DirectFragment() {
+	}
 
-    @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-    }
+	@Override
+	public void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
+	}
 
-    @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.direct_fragment, container, false);
-    }
+	@Override
+	public View onCreateView(LayoutInflater inflater, ViewGroup container,
+			Bundle savedInstanceState) {
+		return inflater.inflate(R.layout.direct_fragment, container, false);
+	}
 
-    @Override
-    public void onViewCreated(View view, Bundle savedInstanceState) {
-        super.onViewCreated(view, savedInstanceState);
-    }
+	@Override
+	public void onViewCreated(View view, Bundle savedInstanceState) {
+		super.onViewCreated(view, savedInstanceState);
+	}
 
-    @Override
-    public void onStart() {
-        super.onStart();
-    }
+	@Override
+	public void onStart() {
+		super.onStart();
+	}
 
-    @Override
-    public void onStop() {
-        super.onStop();
-    }
+	@Override
+	public void onStop() {
+		super.onStop();
+	}
 
-    @Override
-    public void onAttach(Activity activity) {
-        super.onAttach(activity);
-        if (!(activity instanceof Callbacks)) {
-            throw new ClassCastException("Activity must implement callbacks.");
-        }
-    }
+	@Override
+	public void onAttach(Activity activity) {
+		super.onAttach(activity);
+		if (!(activity instanceof Callbacks)) {
+			throw new ClassCastException("Activity must implement callbacks.");
+		}
+	}
 
-    @Override
-    public void onDetach() {
-        super.onDetach();
-    }
+	@Override
+	public void onDetach() {
+		super.onDetach();
+	}
 
-    public interface Callbacks {
-        public ImageFetcher onGetImageFetcher();
+	public interface Callbacks {
+		public ImageFetcher onGetImageFetcher();
 
-        public void onVideoSelected(VideoData video);
+		public void onVideoSelected(VideoData video);
 
-        public void onResume();
+		public void onResume();
 
-    }
+	}
 
-    public void directLite(final VideoData video, final String accountName) {
-        video.addTag(Constants.DEFAULT_KEYWORD);
-        video.addTag(Upload.generateKeywordFromPlaylistId(Constants.UPLOAD_PLAYLIST));
+//	public void directLite(final VideoData video, final String accountName) {
+//		video.addTags(Arrays.asList(Constants.DEFAULT_KEYWORD,
+//				Upload.generateKeywordFromPlaylistId(Constants.UPLOAD_PLAYLIST)));
+//
+//		new AsyncTask<Void, Void, Void>() {
+//			@Override
+//			protected Void doInBackground(Void... voids) {
+//
+//				credential = GoogleAccountCredential.usingOAuth2(getActivity(),
+//						Collections.singleton(YouTubeScopes.YOUTUBE));
+//				credential.setSelectedAccountName(accountName);
+//				credential.setBackOff(new ExponentialBackOff());
+//
+//				YouTube youtube = new YouTube.Builder(transport, jsonFactory,
+//						credential).setApplicationName(Constants.APP_NAME)
+//						.build();
+//				try {
+//					youtube.videos().update("snippet", video.getVideo())
+//							.execute();
+//				} catch (IOException e) {
+//					Log.e(this.getClass().toString(), e.getMessage());
+//				}
+//				return null;
+//			}
+//
+//		}.execute((Void) null);
+//
+//	}
 
-        new AsyncTask<Void, Void, Void>() {
-            @Override
-            protected Void doInBackground(Void... voids) {
-                
-                credential =
-                        GoogleAccountCredential.usingOAuth2(getActivity(), Collections.singleton(YouTubeScopes.YOUTUBE));
-                credential.setSelectedAccountName(accountName);
-                credential.setBackOff(new ExponentialBackOff());
-                
-                YouTube youtube =
-                        new YouTube.Builder(transport, jsonFactory, credential).setApplicationName(
-                                Constants.APP_NAME).build();
-                try {
-                    youtube.videos().update("snippet", video.getVideo()).execute();
-                } catch (IOException e) {
-                    Log.e(this.getClass().toString(), e.getMessage());
-                }
-                return null;
-            }
+	public void panToVideo(final VideoData video) {
+		popPlayerFromBackStack();
+		YouTubePlayerFragment playerFragment = YouTubePlayerFragment
+				.newInstance();
+		getFragmentManager()
+				.beginTransaction()
+				.replace(R.id.detail_container, playerFragment,
+						YOUTUBE_FRAGMENT_TAG)
+				.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE)
+				.addToBackStack(null).commit();
+		playerFragment.initialize(Auth.KEY,
+				new YouTubePlayer.OnInitializedListener() {
+					@Override
+					public void onInitializationSuccess(
+							YouTubePlayer.Provider provider,
+							YouTubePlayer youTubePlayer, boolean b) {
+						youTubePlayer.loadVideo(video.getYouTubeId());
+						mYouTubePlayer = youTubePlayer;
+						youTubePlayer
+								.setPlayerStateChangeListener(DirectFragment.this);
+						youTubePlayer
+								.setOnFullscreenListener(DirectFragment.this);
+					}
 
-        }.execute((Void) null);
+					@Override
+					public void onInitializationFailure(
+							YouTubePlayer.Provider provider,
+							YouTubeInitializationResult result) {
+						showErrorToast(result.toString());
+					}
+				});
+	}
 
-    }
+	public boolean popPlayerFromBackStack() {
+		if (mIsFullScreen) {
+			mYouTubePlayer.setFullscreen(false);
+			return false;
+		}
+		if (getFragmentManager().findFragmentByTag(YOUTUBE_FRAGMENT_TAG) != null) {
+			getFragmentManager().popBackStack();
+			return false;
+		}
+		return true;
+	}
 
-    public void panToVideo(final VideoData video) {
-        popPlayerFromBackStack();
-        YouTubePlayerFragment playerFragment = YouTubePlayerFragment.newInstance();
-        getFragmentManager().beginTransaction()
-                .replace(R.id.detail_container, playerFragment, YOUTUBE_FRAGMENT_TAG)
-                .setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE).addToBackStack(null).commit();
-        playerFragment.initialize(Auth.KEY, new YouTubePlayer.OnInitializedListener() {
-            @Override
-            public void onInitializationSuccess(YouTubePlayer.Provider provider,
-                                                YouTubePlayer youTubePlayer, boolean b) {
-                youTubePlayer.loadVideo(video.getYouTubeId());
-                mYouTubePlayer = youTubePlayer;
-                youTubePlayer.setPlayerStateChangeListener(DirectFragment.this);
-                youTubePlayer.setOnFullscreenListener(DirectFragment.this);
-            }
+	@Override
+	public void onAdStarted() {
+	}
 
-            @Override
-            public void onInitializationFailure(YouTubePlayer.Provider provider,
-                                                YouTubeInitializationResult result) {
-                showErrorToast(result.toString());
-            }
-        });
-    }
+	@Override
+	public void onError(YouTubePlayer.ErrorReason errorReason) {
+		showErrorToast(errorReason.toString());
+	}
 
+	private void showErrorToast(String message) {
+		Toast.makeText(getActivity(), message, Toast.LENGTH_SHORT).show();
+	}
 
-    public boolean popPlayerFromBackStack() {
-        if (mIsFullScreen) {
-            mYouTubePlayer.setFullscreen(false);
-            return false;
-        }
-        if (getFragmentManager().findFragmentByTag(YOUTUBE_FRAGMENT_TAG) != null) {
-            getFragmentManager().popBackStack();
-            return false;
-        }
-        return true;
-    }
+	@Override
+	public void onLoaded(String arg0) {
+	}
 
-    @Override
-    public void onAdStarted() {
-    }
+	@Override
+	public void onLoading() {
+	}
 
-    @Override
-    public void onError(YouTubePlayer.ErrorReason errorReason) {
-        showErrorToast(errorReason.toString());
-    }
+	@Override
+	public void onVideoEnded() {
+		popPlayerFromBackStack();
+	}
 
-    private void showErrorToast(String message) {
-        Toast.makeText(getActivity(), message, Toast.LENGTH_SHORT).show();
-    }
+	@Override
+	public void onVideoStarted() {
+	}
 
-    @Override
-    public void onLoaded(String arg0) {
-    }
-
-    @Override
-    public void onLoading() {
-    }
-
-    @Override
-    public void onVideoEnded() {
-        popPlayerFromBackStack();
-    }
-
-    @Override
-    public void onVideoStarted() {
-    }
-
-    @Override
-    public void onFullscreen(boolean fullScreen) {
-        mIsFullScreen = fullScreen;
-    }
+	@Override
+	public void onFullscreen(boolean fullScreen) {
+		mIsFullScreen = fullScreen;
+	}
 }
