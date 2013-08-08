@@ -16,7 +16,7 @@
             android:layout_width="32dp"
             android:layout_height="32dp"
             android:scaleType="centerCrop"
-            android:background="#1000" />
+            android:background="#1000" android:contentDescription="@string/avatar"/>
 
         <TextView android:id="@+id/display_name"
             android:textAppearance="?android:textAppearanceLarge"
@@ -33,7 +33,7 @@
         android:orientation="horizontal"
         android:gravity="center_vertical">
 
-        <TextView android:id="@+id/display_name"
+        <TextView
             android:textAppearance="?android:textAppearanceMedium"
             android:fontFamily="sans-serif-light"
             android:layout_width="wrap_content"
@@ -52,7 +52,9 @@
             android:id="@+id/grid_view"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:divider="@drawable/list_divider_horizontal_inset" />
+            android:divider="@drawable/list_divider_horizontal_inset"
+            android:fastScrollEnabled="true"
+            android:numColumns="auto_fit" />
 
         <TextView android:id="@android:id/empty"
             android:layout_width="match_parent"

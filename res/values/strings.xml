@@ -36,5 +36,6 @@
     <string name="hello_world">Hello world!</string>
     <string name="pick_one_of_your_videos_to_submit">Pick one of your videos to submit</string>
     <string name="no_videos_to_show_here_">No videos to show here.</string>
+    <string name="avatar">avatar</string>
 
 </resources>
