@@ -24,6 +24,7 @@ import com.google.ytdl.util.ImageWorker;
 import com.google.ytdl.util.VideoData;
 
 import android.app.Activity;
+import android.app.Fragment;
 import android.app.ListFragment;
 import android.content.IntentSender;
 import android.os.Bundle;
@@ -32,6 +33,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
+import android.widget.GridView;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -43,7 +45,7 @@ import java.util.List;
  *         <p/>
  *         Left side fragment showing user's uploaded YouTube videos.
  */
-public class UploadsListFragment extends ListFragment implements
+public class UploadsListFragment extends Fragment implements
         GooglePlayServicesClient.ConnectionCallbacks,
         GooglePlayServicesClient.OnConnectionFailedListener {
 
@@ -52,7 +54,8 @@ public class UploadsListFragment extends ListFragment implements
     private PlusClient mPlusClient;
 
     private static final String TAG = UploadsListFragment.class.getName();
-
+	private GridView mGridView;
+	
     public UploadsListFragment() {
     }
 
@@ -65,7 +68,9 @@ public class UploadsListFragment extends ListFragment implements
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.list_fragment, container, false);
+        View listView = inflater.inflate(R.layout.list_fragment, container, false);
+        mGridView = (GridView) listView.findViewById(R.id.grid_view);
+        return listView;
     }
 
     @Override
@@ -79,7 +84,7 @@ public class UploadsListFragment extends ListFragment implements
             return;
         }
 
-        setListAdapter(new UploadedVideoAdapter(videos));
+       mGridView.setAdapter(new UploadedVideoAdapter(videos));
     }
 
     public void setProfileInfo(Person person) {
@@ -111,15 +116,15 @@ public class UploadsListFragment extends ListFragment implements
     @Override
     public void onResume() {
         super.onResume();
-        if (mPlusClient.isConnected() && getListAdapter() != null) {
-            ((UploadedVideoAdapter) getListAdapter()).notifyDataSetChanged();
+        if (mPlusClient.isConnected() && mGridView.getAdapter() != null) {
+            ((UploadedVideoAdapter) mGridView.getAdapter()).notifyDataSetChanged();
         }
     }
 
     @Override
     public void onConnected(Bundle bundle) {
-        if (getListAdapter() != null) {
-            ((UploadedVideoAdapter) getListAdapter()).notifyDataSetChanged();
+        if (mGridView.getAdapter() != null) {
+            ((UploadedVideoAdapter) mGridView.getAdapter()).notifyDataSetChanged();
         }
     }
 

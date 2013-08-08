@@ -48,6 +48,7 @@
             android:layout_gravity="right|bottom"
             android:drawableTop="@drawable/ic_device_access_video"
             android:ellipsize="end"
+            android:textColorHint="#c00"
             android:fontFamily="sans-serif-condensed"
             android:hint="@string/button_record"
             android:maxLines="2"
