@@ -21,7 +21,6 @@ import android.content.Intent;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
-
 import com.google.api.client.googleapis.extensions.android.gms.auth.GooglePlayServicesAvailabilityIOException;
 import com.google.api.client.googleapis.extensions.android.gms.auth.UserRecoverableAuthIOException;
 import com.google.api.client.googleapis.media.MediaHttpUploader;
@@ -33,7 +32,6 @@ import com.google.api.services.youtube.model.VideoListResponse;
 import com.google.api.services.youtube.model.VideoSnippet;
 import com.google.api.services.youtube.model.VideoStatus;
 import com.google.ytdl.util.Upload;
-
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -217,8 +215,8 @@ public class ResumableUpload {
         notificationIntent.putExtra("videoId", videoId);
         PendingIntent contentIntent = PendingIntent.getActivity(context,
                 0, notificationIntent, PendingIntent.FLAG_CANCEL_CURRENT);
-        builder.setContentTitle("Watch your video") // TODO - replace string constants
-                .setContentText("See the newly uploaded video").setContentIntent(contentIntent).setSmallIcon(R.drawable.ic_launcher);
+        builder.setContentTitle(context.getString(R.string.watch_your_video))
+                .setContentText(context.getString(R.string.see_the_newly_uploaded_video)).setContentIntent(contentIntent).setSmallIcon(R.drawable.ic_launcher);
         notifyManager.notify(PLAYBACK_NOTIFICATION_ID, builder.build());
         Log.d(TAG, String.format("Selectable notification for video ID [%s] posted", videoId));
     }

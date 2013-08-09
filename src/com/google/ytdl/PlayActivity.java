@@ -4,7 +4,9 @@ import android.app.Activity;
 import android.app.FragmentTransaction;
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.v4.app.NavUtils;
 import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.Toast;
 
@@ -33,128 +35,138 @@ import com.google.ytdl.util.VideoData;
  * is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
- */ 
+ */
 
 /**
  * @author Ibrahim Ulukaya <ulukaya@google.com>
  *         <p/>
- *         Main fragment showing YouTube Direct Lite upload options and having YT Android Player.
+ *         Main fragment showing YouTube Direct Lite upload options and having
+ *         YT Android Player.
  */
 public class PlayActivity extends Activity implements
-PlayerStateChangeListener, OnFullscreenListener {
+		PlayerStateChangeListener, OnFullscreenListener {
 
-	    private YouTubePlayer mYouTubePlayer;
-	    private boolean mIsFullScreen = false;
-	    private static final String YOUTUBE_FRAGMENT_TAG = "youtube";
-	    GoogleAccountCredential credential;
-	    final HttpTransport transport = AndroidHttp.newCompatibleTransport();
-	    final JsonFactory jsonFactory = new GsonFactory();
-		private Intent intent;
-		
-	    public PlayActivity() {
-	    }
+	private YouTubePlayer mYouTubePlayer;
+	private boolean mIsFullScreen = false;
+	private static final String YOUTUBE_FRAGMENT_TAG = "youtube";
+	GoogleAccountCredential credential;
+	final HttpTransport transport = AndroidHttp.newCompatibleTransport();
+	final JsonFactory jsonFactory = new GsonFactory();
+	private Intent intent;
 
-	    @Override
-	    public void onStart() {
-	        super.onStart();
-	        
-	    }
+	public PlayActivity() {
+	}
 
-	    @Override
-	    public void onStop() {
-	        super.onStop();
-	    }
+	@Override
+	public void onStart() {
+		super.onStart();
 
-	    public interface Callbacks {
-	        public ImageFetcher onGetImageFetcher();
+	}
 
-	        public void onVideoSelected(VideoData video);
+	@Override
+	public void onStop() {
+		super.onStop();
+	}
 
-	        public void onResume();
+	public interface Callbacks {
+		public ImageFetcher onGetImageFetcher();
 
-	    }
+		public void onVideoSelected(VideoData video);
 
-	    public void directLite(View view) {
-	    	this.setResult(RESULT_OK, intent);
-	    	finish();
-	    }
+		public void onResume();
 
-	    public void panToVideo(final String youtubeId) {
-	        popPlayerFromBackStack();
-	        YouTubePlayerFragment playerFragment = YouTubePlayerFragment.newInstance();
-	        getFragmentManager().beginTransaction()
-	                .replace(R.id.detail_container, playerFragment, YOUTUBE_FRAGMENT_TAG)
-	                .setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE).addToBackStack(null).commit();
-	        playerFragment.initialize(Auth.KEY, new YouTubePlayer.OnInitializedListener() {
-	            @Override
-	            public void onInitializationSuccess(YouTubePlayer.Provider provider,
-	                                                YouTubePlayer youTubePlayer, boolean b) {
-	                youTubePlayer.loadVideo(youtubeId);
-	                mYouTubePlayer = youTubePlayer;
-	                youTubePlayer.setPlayerStateChangeListener(PlayActivity.this);
-	                youTubePlayer.setOnFullscreenListener(PlayActivity.this);
-	            }
+	}
 
-	            @Override
-	            public void onInitializationFailure(YouTubePlayer.Provider provider,
-	                                                YouTubeInitializationResult result) {
-	                showErrorToast(result.toString());
-	            }
-	        });
-	    }
+	public void directLite(View view) {
+		this.setResult(RESULT_OK, intent);
+		finish();
+	}
 
+	public void panToVideo(final String youtubeId) {
+		popPlayerFromBackStack();
+		YouTubePlayerFragment playerFragment = YouTubePlayerFragment
+				.newInstance();
+		getFragmentManager()
+				.beginTransaction()
+				.replace(R.id.detail_container, playerFragment,
+						YOUTUBE_FRAGMENT_TAG)
+				.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE)
+				.addToBackStack(null).commit();
+		playerFragment.initialize(Auth.KEY,
+				new YouTubePlayer.OnInitializedListener() {
+					@Override
+					public void onInitializationSuccess(
+							YouTubePlayer.Provider provider,
+							YouTubePlayer youTubePlayer, boolean b) {
+						youTubePlayer.loadVideo(youtubeId);
+						mYouTubePlayer = youTubePlayer;
+						youTubePlayer
+								.setPlayerStateChangeListener(PlayActivity.this);
+						youTubePlayer
+								.setOnFullscreenListener(PlayActivity.this);
+					}
 
-	    public boolean popPlayerFromBackStack() {
-	        if (mIsFullScreen) {
-	            mYouTubePlayer.setFullscreen(false);
-	            return false;
-	        }
-	        if (getFragmentManager().findFragmentByTag(YOUTUBE_FRAGMENT_TAG) != null) {
-	            getFragmentManager().popBackStack();
-	            return false;
-	        }
-	        return true;
-	    }
+					@Override
+					public void onInitializationFailure(
+							YouTubePlayer.Provider provider,
+							YouTubeInitializationResult result) {
+						showErrorToast(result.toString());
+					}
+				});
+	}
 
-	    @Override
-	    public void onAdStarted() {
-	    }
+	public boolean popPlayerFromBackStack() {
+		if (mIsFullScreen) {
+			mYouTubePlayer.setFullscreen(false);
+			return false;
+		}
+		if (getFragmentManager().findFragmentByTag(YOUTUBE_FRAGMENT_TAG) != null) {
+			getFragmentManager().popBackStack();
+			return false;
+		}
+		return true;
+	}
 
-	    @Override
-	    public void onError(YouTubePlayer.ErrorReason errorReason) {
-	        showErrorToast(errorReason.toString());
-	    }
+	@Override
+	public void onAdStarted() {
+	}
 
-	    private void showErrorToast(String message) {
-	        Toast.makeText(getApplicationContext(), message, Toast.LENGTH_SHORT).show();
-	    }
+	@Override
+	public void onError(YouTubePlayer.ErrorReason errorReason) {
+		showErrorToast(errorReason.toString());
+	}
 
-	    @Override
-	    public void onLoaded(String arg0) {
-	    }
+	private void showErrorToast(String message) {
+		Toast.makeText(getApplicationContext(), message, Toast.LENGTH_SHORT)
+				.show();
+	}
 
-	    @Override
-	    public void onLoading() {
-	    }
+	@Override
+	public void onLoaded(String arg0) {
+	}
 
-	    @Override
-	    public void onVideoEnded() {
-	        //popPlayerFromBackStack();
-	    }
+	@Override
+	public void onLoading() {
+	}
 
-	    @Override
-	    public void onVideoStarted() {
-	    }
+	@Override
+	public void onVideoEnded() {
+		// popPlayerFromBackStack();
+	}
 
-	    @Override
-	    public void onFullscreen(boolean fullScreen) {
-	        mIsFullScreen = fullScreen;
-	    }
+	@Override
+	public void onVideoStarted() {
+	}
 
-	
+	@Override
+	public void onFullscreen(boolean fullScreen) {
+		mIsFullScreen = fullScreen;
+	}
+
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+		getActionBar().setDisplayHomeAsUpEnabled(true);
 		intent = getIntent();
 		String youtubeId = intent.getStringExtra(MainActivity.YOUTUBE_ID);
 		setContentView(R.layout.activity_play);
@@ -167,8 +179,16 @@ PlayerStateChangeListener, OnFullscreenListener {
 		getMenuInflater().inflate(R.menu.play, menu);
 		return true;
 	}
-	
-	
-	
+
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+		switch (item.getItemId()) {
+		// Respond to the action bar's Up/Home button
+		case android.R.id.home:
+			NavUtils.navigateUpFromSameTask(this);
+			return true;
+		}
+		return super.onOptionsItemSelected(item);
+	}
 
 }

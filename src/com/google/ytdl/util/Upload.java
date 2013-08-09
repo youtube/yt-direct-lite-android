@@ -29,7 +29,6 @@ public class Upload {
         if (keyword.length() > Constants.MAX_KEYWORD_LENGTH) {
             keyword = keyword.substring(0, Constants.MAX_KEYWORD_LENGTH);
         }
-        Log.e("replace",keyword);
         return keyword;
     }
 

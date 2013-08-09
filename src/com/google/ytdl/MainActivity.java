@@ -91,14 +91,12 @@ public class MainActivity extends Activity implements
 	public static final String MESSAGE_KEY = "message";
 	public static final String YOUTUBE_ID = "youtubeId";
 	public static final String YOUTUBE_WATCH_URL_PREFIX = "http://www.youtube.com/watch?v=";
-    private static final String TAG = "MainActivity";
-	
-    static final String REQUEST_AUTHORIZATION_INTENT = "com.google.example.yt.RequestAuth";
-    static final String REQUEST_AUTHORIZATION_INTENT_PARAM = "com.google.example.yt.RequestAuth.param";
+	private static final String TAG = "MainActivity";
 
+	static final String REQUEST_AUTHORIZATION_INTENT = "com.google.example.yt.RequestAuth";
+	static final String REQUEST_AUTHORIZATION_INTENT_PARAM = "com.google.example.yt.RequestAuth.param";
 
 	private ImageFetcher mImageFetcher;
-
 
 	private String mChosenAccountName;
 	private Uri mFileURI = null;
@@ -106,7 +104,7 @@ public class MainActivity extends Activity implements
 
 	private VideoData mVideoData;
 
-    private UploadBroadcastReceiver broadcastReceiver;
+	private UploadBroadcastReceiver broadcastReceiver;
 
 	private UploadsListFragment mUploadsListFragment;
 
@@ -247,13 +245,16 @@ public class MainActivity extends Activity implements
 		missingConfigList.setAdapter(adapter);
 	}
 
-    @Override
-    protected void onResume() {
-        super.onResume();
-        if (broadcastReceiver == null) broadcastReceiver = new UploadBroadcastReceiver();
-        IntentFilter intentFilter = new IntentFilter(REQUEST_AUTHORIZATION_INTENT);
-        LocalBroadcastManager.getInstance(this).registerReceiver(broadcastReceiver, intentFilter);
-    }
+	@Override
+	protected void onResume() {
+		super.onResume();
+		if (broadcastReceiver == null)
+			broadcastReceiver = new UploadBroadcastReceiver();
+		IntentFilter intentFilter = new IntentFilter(
+				REQUEST_AUTHORIZATION_INTENT);
+		LocalBroadcastManager.getInstance(this).registerReceiver(
+				broadcastReceiver, intentFilter);
+	}
 
 	private void ensureFetcher() {
 		if (mImageFetcher == null) {
@@ -331,7 +332,6 @@ public class MainActivity extends Activity implements
 					Intent intent = new Intent(this, ReviewActivity.class);
 					intent.setData(mFileURI);
 					startActivity(intent);
-					// mButton.setEnabled(true);
 				}
 			}
 			break;
@@ -340,10 +340,10 @@ public class MainActivity extends Activity implements
 			if (resultCode == RESULT_OK) {
 				mFileURI = data.getData();
 				if (mFileURI != null) {
+					Log.e("dfs", "sgcfghdhd");
 					Intent intent = new Intent(this, ReviewActivity.class);
 					intent.setData(mFileURI);
 					startActivity(intent);
-					// mButton.setEnabled(true);
 				}
 			}
 			break;
@@ -584,14 +584,12 @@ public class MainActivity extends Activity implements
 		// ACTION_GET_CONTENT
 		intent.setType("video/*");
 		startActivityForResult(intent, RESULT_PICK_IMAGE_CROP);
-
 	}
 
 	public void recordVideo(View view) {
 		Intent intent = new Intent(MediaStore.ACTION_VIDEO_CAPTURE); // TODO
 		// ACTION_GET_CONTENT
 		startActivityForResult(intent, RESULT_VIDEO_CAP);
-
 	}
 
 	public void showGooglePlayServicesAvailabilityErrorDialog(
@@ -633,15 +631,15 @@ public class MainActivity extends Activity implements
 				REQUEST_ACCOUNT_PICKER);
 	}
 
-    private class UploadBroadcastReceiver extends BroadcastReceiver {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            if (intent.getAction().equals(REQUEST_AUTHORIZATION_INTENT)) {
-                Log.d(TAG, "Request auth received - executing the intent");
-                Intent toRun = intent.getParcelableExtra(REQUEST_AUTHORIZATION_INTENT_PARAM);
-                startActivityForResult(
-                        toRun, REQUEST_AUTHORIZATION);
-            }
-        }
-    }
+	private class UploadBroadcastReceiver extends BroadcastReceiver {
+		@Override
+		public void onReceive(Context context, Intent intent) {
+			if (intent.getAction().equals(REQUEST_AUTHORIZATION_INTENT)) {
+				Log.d(TAG, "Request auth received - executing the intent");
+				Intent toRun = intent
+						.getParcelableExtra(REQUEST_AUTHORIZATION_INTENT_PARAM);
+				startActivityForResult(toRun, REQUEST_AUTHORIZATION);
+			}
+		}
+	}
 }
