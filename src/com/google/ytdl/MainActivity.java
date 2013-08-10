@@ -130,7 +130,7 @@ public class MainActivity extends Activity implements
 
 			credential = GoogleAccountCredential.usingOAuth2(
 					getApplicationContext(),
-					Arrays.asList(Scopes.PLUS_PROFILE, YouTubeScopes.YOUTUBE));
+					Arrays.asList(Auth.SCOPES));
 			// set exponential backoff policy
 			credential.setBackOff(new ExponentialBackOff());
 

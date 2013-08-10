@@ -14,7 +14,12 @@
 
 package com.google.ytdl;
 
+import com.google.android.gms.common.Scopes;
+import com.google.api.services.youtube.YouTubeScopes;
+
 public class Auth {
     // Register an API key here: https://code.google.com/apis/console
     public static final String KEY = "Replace me with your API key";
+
+    public static final String[] SCOPES = { Scopes.PLUS_PROFILE, YouTubeScopes.YOUTUBE };
 }
