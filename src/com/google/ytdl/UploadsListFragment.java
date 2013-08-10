@@ -71,6 +71,8 @@ public class UploadsListFragment extends Fragment implements ConnectionCallbacks
                              Bundle savedInstanceState) {
         View listView = inflater.inflate(R.layout.list_fragment, container, false);
         mGridView = (GridView) listView.findViewById(R.id.grid_view);
+        TextView emptyView = (TextView) listView.findViewById(android.R.id.empty);
+        mGridView.setEmptyView(emptyView);
         return listView;
     }
 

@@ -125,8 +125,6 @@ public class MainActivity extends Activity implements
 			setContentView(R.layout.activity_main);
 
 			ensureFetcher();
-			// mButton = (Button) findViewById(R.id.upload_button);
-			// mButton.setEnabled(false);
 
 			credential = GoogleAccountCredential.usingOAuth2(
 					getApplicationContext(),
@@ -254,6 +252,7 @@ public class MainActivity extends Activity implements
 				REQUEST_AUTHORIZATION_INTENT);
 		LocalBroadcastManager.getInstance(this).registerReceiver(
 				broadcastReceiver, intentFilter);
+		loadData();
 	}
 
 	private void ensureFetcher() {
@@ -572,11 +571,9 @@ public class MainActivity extends Activity implements
 	@Override
 	public void onVideoSelected(VideoData video) {
 		mVideoData = video;
-		// mButton.setEnabled(true);
 		Intent intent = new Intent(this, PlayActivity.class);
 		intent.putExtra(YOUTUBE_ID, video.getYouTubeId());
 		startActivityForResult(intent, REQUEST_DIRECT_TAG);
-		// mDirectFragment.panToVideo(video);
 	}
 
 	public void pickFile(View view) {

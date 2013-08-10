@@ -35,10 +35,10 @@
     <string name="send">Click send</string>
     <string name="title_activity_review">ReviewActivity</string>
     <string name="hello_world">Hello world!</string>
-    <string name="pick_one_of_your_videos_to_submit">Pick one of your videos to submit</string>
+    <string name="pick_one_of_your_videos_to_submit">Submit an existing YouTube video or upload a new video using the options below</string>
     <string name="no_videos_to_show_here_">No videos to show here.</string>
     <string name="avatar">avatar</string>
-    <string name="pick_or_record_a_video_to_upload">Pick or Record a video to upload</string>
+    <string name="pick_or_record_a_video_to_upload">Upload an existing video from your device or record a new one</string>
     <string name="see_the_newly_uploaded_video">See the newly uploaded video</string>
     <string name="watch_your_video">Watch your video</string>
 
