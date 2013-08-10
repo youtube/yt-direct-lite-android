@@ -26,12 +26,11 @@ import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.gson.GsonFactory;
 import com.google.api.client.util.ExponentialBackOff;
 import com.google.api.services.youtube.YouTube;
-import com.google.api.services.youtube.YouTubeScopes;
+import com.google.common.collect.Lists;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Collections;
 
 /**
  * @author Ibrahim Ulukaya <ulukaya@google.com>
@@ -84,7 +83,7 @@ public class UploadService extends IntentService {
         String chosenAccountName = intent.getStringExtra(MainActivity.ACCOUNT_KEY);
 
         credential =
-                GoogleAccountCredential.usingOAuth2(getApplicationContext(), Collections.singleton(YouTubeScopes.YOUTUBE));
+                GoogleAccountCredential.usingOAuth2(getApplicationContext(), Lists.newArrayList(Auth.SCOPES));
         credential.setSelectedAccountName(chosenAccountName);
         credential.setBackOff(new ExponentialBackOff());
 
