@@ -15,7 +15,8 @@
 package com.google.ytdl;
 
 import com.google.android.gms.common.ConnectionResult;
-import com.google.android.gms.common.GooglePlayServicesClient;
+import com.google.android.gms.common.GooglePlayServicesClient.ConnectionCallbacks;
+import com.google.android.gms.common.GooglePlayServicesClient.OnConnectionFailedListener;
 import com.google.android.gms.plus.PlusClient;
 import com.google.android.gms.plus.PlusOneButton;
 import com.google.api.services.plus.model.Person;
@@ -25,7 +26,6 @@ import com.google.ytdl.util.VideoData;
 
 import android.app.Activity;
 import android.app.Fragment;
-import android.app.ListFragment;
 import android.content.IntentSender;
 import android.os.Bundle;
 import android.util.Log;
@@ -45,9 +45,8 @@ import java.util.List;
  *         <p/>
  *         Left side fragment showing user's uploaded YouTube videos.
  */
-public class UploadsListFragment extends Fragment implements
-        GooglePlayServicesClient.ConnectionCallbacks,
-        GooglePlayServicesClient.OnConnectionFailedListener {
+public class UploadsListFragment extends Fragment implements ConnectionCallbacks,
+        OnConnectionFailedListener {
 
     private Callbacks mCallbacks;
     private ImageWorker mImageFetcher;
@@ -62,7 +61,9 @@ public class UploadsListFragment extends Fragment implements
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        mPlusClient = new PlusClient.Builder(getActivity(), this, this).build();
+        mPlusClient = new PlusClient.Builder(getActivity(), this, this)
+                .setScopes(Auth.SCOPES)
+                .build();
     }
 
     @Override
@@ -102,23 +103,15 @@ public class UploadsListFragment extends Fragment implements
     }
 
     @Override
-    public void onStart() {
-        super.onStart();
+    public void onResume() {
+        super.onResume();
         mPlusClient.connect();
     }
 
     @Override
-    public void onStop() {
-        super.onStop();
+    public void onPause() {
+        super.onPause();
         mPlusClient.disconnect();
-    }
-
-    @Override
-    public void onResume() {
-        super.onResume();
-        if (mPlusClient.isConnected() && mGridView.getAdapter() != null) {
-            ((UploadedVideoAdapter) mGridView.getAdapter()).notifyDataSetChanged();
-        }
     }
 
     @Override
