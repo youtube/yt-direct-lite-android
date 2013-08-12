@@ -49,7 +49,7 @@ import android.widget.ListView;
 import android.widget.TextView;
 
 import com.google.android.gms.common.GooglePlayServicesUtil;
-import com.google.android.gms.common.Scopes;
+import com.google.android.gms.plus.model.people.Person;
 import com.google.api.client.extensions.android.http.AndroidHttp;
 import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential;
 import com.google.api.client.googleapis.extensions.android.gms.auth.GooglePlayServicesAvailabilityIOException;
@@ -58,10 +58,7 @@ import com.google.api.client.http.HttpTransport;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.gson.GsonFactory;
 import com.google.api.client.util.ExponentialBackOff;
-import com.google.api.services.plus.Plus;
-import com.google.api.services.plus.model.Person;
 import com.google.api.services.youtube.YouTube;
-import com.google.api.services.youtube.YouTubeScopes;
 import com.google.api.services.youtube.model.ChannelListResponse;
 import com.google.api.services.youtube.model.PlaylistItem;
 import com.google.api.services.youtube.model.PlaylistItemListResponse;
@@ -281,7 +278,6 @@ public class MainActivity extends Activity implements
 			return;
 		}
 
-		loadProfile();
 		loadUploadedVideos();
 	}
 
@@ -353,10 +349,7 @@ public class MainActivity extends Activity implements
 			}
 			break;
 		case REQUEST_AUTHORIZATION:
-			if (resultCode == Activity.RESULT_OK) {
-				// load data
-				loadData();
-			} else {
+			if (resultCode != Activity.RESULT_OK) {
 				chooseAccount();
 			}
 			break;
@@ -369,8 +362,6 @@ public class MainActivity extends Activity implements
 					mChosenAccountName = accountName;
 					credential.setSelectedAccountName(accountName);
 					saveAccount();
-					// load data
-					loadData();
 				}
 			}
 			break;
@@ -417,38 +408,6 @@ public class MainActivity extends Activity implements
 	protected void onSaveInstanceState(Bundle outState) {
 		super.onSaveInstanceState(outState);
 		outState.putString(ACCOUNT_KEY, mChosenAccountName);
-	}
-
-	private void loadProfile() {
-		new AsyncTask<Void, Void, Person>() {
-			@Override
-			protected Person doInBackground(Void... voids) {
-
-				Plus plus = new Plus.Builder(transport, jsonFactory, credential)
-						.setApplicationName(Constants.APP_NAME).build();
-
-				try {
-					return plus.people().get("me").execute();
-				} catch (final GooglePlayServicesAvailabilityIOException availabilityException) {
-					showGooglePlayServicesAvailabilityErrorDialog(availabilityException
-							.getConnectionStatusCode());
-				} catch (UserRecoverableAuthIOException userRecoverableException) {
-					startActivityForResult(
-							userRecoverableException.getIntent(),
-							REQUEST_AUTHORIZATION);
-				} catch (IOException e) {
-					Utils.logAndShow(MainActivity.this, Constants.APP_NAME, e);
-				}
-				return null;
-
-			}
-
-			@Override
-			protected void onPostExecute(Person me) {
-				mUploadsListFragment.setProfileInfo(me);
-			}
-
-		}.execute((Void) null);
 	}
 
 	private void loadUploadedVideos() {
@@ -575,7 +534,13 @@ public class MainActivity extends Activity implements
 		startActivityForResult(intent, REQUEST_DIRECT_TAG);
 	}
 
-	public void pickFile(View view) {
+    @Override
+    public void onConnected(String connectedAccountName) {
+        // Make API requests only when the user has successfully signed in.
+        loadData();
+    }
+
+    public void pickFile(View view) {
 		Intent intent = new Intent(Intent.ACTION_PICK); // TODO
 		// ACTION_GET_CONTENT
 		intent.setType("video/*");
@@ -616,9 +581,6 @@ public class MainActivity extends Activity implements
 		if (credential.getSelectedAccountName() == null) {
 			// ask user to choose account
 			chooseAccount();
-		} else {
-			// load data
-			loadData();
 		}
 	}
 
