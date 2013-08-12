@@ -19,7 +19,7 @@ import com.google.android.gms.common.GooglePlayServicesClient.ConnectionCallback
 import com.google.android.gms.common.GooglePlayServicesClient.OnConnectionFailedListener;
 import com.google.android.gms.plus.PlusClient;
 import com.google.android.gms.plus.PlusOneButton;
-import com.google.api.services.plus.model.Person;
+import com.google.android.gms.plus.model.people.Person;
 import com.google.ytdl.util.ImageFetcher;
 import com.google.ytdl.util.ImageWorker;
 import com.google.ytdl.util.VideoData;
@@ -77,7 +77,7 @@ public class UploadsListFragment extends Fragment implements ConnectionCallbacks
     @Override
     public void onViewCreated(View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        setProfileInfo(null);
+        setProfileInfo();
     }
 
     public void setVideos(List<VideoData> videos) {
@@ -88,17 +88,22 @@ public class UploadsListFragment extends Fragment implements ConnectionCallbacks
        mGridView.setAdapter(new UploadedVideoAdapter(videos));
     }
 
-    public void setProfileInfo(Person person) {
-        if (person == null) {
+    public void setProfileInfo() {
+        if (!mPlusClient.isConnected() || mPlusClient.getCurrentPerson() == null) {
             ((ImageView) getView().findViewById(R.id.avatar))
                     .setImageDrawable(null);
             ((TextView) getView().findViewById(R.id.display_name))
                     .setText(R.string.not_signed_in);
         } else {
-            mImageFetcher.loadImage(person.getImage().getUrl(),
-                    ((ImageView) getView().findViewById(R.id.avatar)));
-            ((TextView) getView().findViewById(R.id.display_name))
-                    .setText(person.getDisplayName());
+            Person currentPerson = mPlusClient.getCurrentPerson();
+            if (currentPerson.hasImage()) {
+                mImageFetcher.loadImage(currentPerson.getImage().getUrl(),
+                        ((ImageView) getView().findViewById(R.id.avatar)));
+            }
+            if (currentPerson.hasDisplayName()) {
+                ((TextView) getView().findViewById(R.id.display_name))
+                        .setText(currentPerson.getDisplayName());
+            }
         }
     }
 
@@ -119,6 +124,9 @@ public class UploadsListFragment extends Fragment implements ConnectionCallbacks
         if (mGridView.getAdapter() != null) {
             ((UploadedVideoAdapter) mGridView.getAdapter()).notifyDataSetChanged();
         }
+
+        setProfileInfo();
+        mCallbacks.onConnected(mPlusClient.getAccountName());
     }
 
     @Override
@@ -217,5 +225,7 @@ public class UploadsListFragment extends Fragment implements ConnectionCallbacks
         public ImageFetcher onGetImageFetcher();
 
         public void onVideoSelected(VideoData video);
+
+        public void onConnected(String connectedAccountName);
     }
 }
