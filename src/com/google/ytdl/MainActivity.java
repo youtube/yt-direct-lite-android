@@ -252,7 +252,6 @@ public class MainActivity extends Activity implements
 				REQUEST_AUTHORIZATION_INTENT);
 		LocalBroadcastManager.getInstance(this).registerReceiver(
 				broadcastReceiver, intentFilter);
-		loadData();
 	}
 
 	private void ensureFetcher() {
