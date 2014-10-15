@@ -1,0 +1,61 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:divider="?android:dividerHorizontal"
+    android:horizontalSpacing="10dp"
+    android:orientation="vertical"
+    android:showDividers="middle"
+    android:verticalSpacing="10dp">
+
+    <fragment
+        android:id="@+id/list_fragment"
+        android:name="com.google.ytdl.UploadsListFragment"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        tools:layout="@layout/list_fragment" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="#eee"
+        android:divider="?android:dividerVertical"
+        android:showDividers="middle">
+
+        <Button
+            android:id="@+id/pick_button"
+            style="?android:attr/borderlessButtonStyle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:drawableTop="@drawable/ic_content_picture"
+            android:ellipsize="end"
+            android:fontFamily="sans-serif-condensed"
+            android:hint="@string/button_pick"
+            android:maxLines="2"
+            android:onClick="pickFile"
+            android:padding="8dp"
+            android:textAppearance="?android:textAppearanceLarge"
+            android:textStyle="bold" />
+
+        <Button
+            android:id="@+id/record_button"
+            style="?android:attr/borderlessButtonStyle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_gravity="right|bottom"
+            android:layout_weight="1"
+            android:drawableTop="@drawable/ic_device_access_video"
+            android:ellipsize="end"
+            android:fontFamily="sans-serif-condensed"
+            android:hint="@string/button_record"
+            android:maxLines="2"
+            android:onClick="recordVideo"
+            android:padding="8dp"
+            android:textAppearance="?android:textAppearanceLarge"
+            android:textColorHint="#c00"
+            android:textStyle="bold" />
+    </LinearLayout>
+
+</LinearLayout>

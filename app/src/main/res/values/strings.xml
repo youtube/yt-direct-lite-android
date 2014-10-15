@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">YouTube Direct Lite</string>
+    <string name="button_authorize">Authorize</string>
+    <string name="button_record">RECORD</string>
+    <string name="button_pick">GALLERY</string>
+    <string name="button_upload">UPLOAD TO YTDL</string>
+    <string name="button_submit">SUBMIT TO YTDL</string>
+    <string name="menu_settings">Settings</string>
+    <string name="title_activity_main">MainActivity</string>
+    <string name="title_activity_display_message">My Message</string>
+    <string name="google_play_not_available">Google Play Services not available</string>
+    <string name="youtube_upload_started">YouTube Direct Lite upload started</string>
+    <string name="connection_to_google_play_failed">Connection to Play Services failed.</string>
+    <string name="youtube_upload">YouTube upload</string>
+    <string name="not_signed_in">Not signed in</string>
+    <string name="dev_setup_explanation">If you\'re seeing this screen, congratulations! You\'ve set up the dependencies for YouTube Direct Lite correctly. You just need to set up the following for the app to work correctly:</string>
+    <string name="error">Error</string>
+    <string name="error_format">[Error] %s</string>
+    <string name="refresh">Refresh</string>
+    <string name="accounts">Accounts</string>
+    <string name="initiation_started">Initiation Started</string>
+    <string name="initiation_completed">Initiation Completed</string>
+    <string name="upload_in_progress">Direct Lite upload in progress</string>
+    <string name="yt_upload_completed">YouTube Upload Completed</string>
+    <string name="upload_completed">Upload completed</string>
+    <string name="upload_not_started">Upload Not Started!</string>
+    <string name="yt_upload_failed">YouTube Upload Failed</string>
+    <string name="reauth_required">Re-login required</string>
+    <string name="please_try_again">Please try again</string>
+    <string name="cant_access_play">Can\'t access to Google Play services</string>
+    <string name="title_activity_play">Click below to submit</string>
+    <string name="action_settings">Settings</string>
+    <string name="send">Click send</string>
+    <string name="title_activity_review">Click below to upload</string>
+    <string name="hello_world">Hello world!</string>
+    <string name="pick_one_of_your_videos_to_submit">Submit an existing YouTube video or upload a new video using the options below</string>
+    <string name="no_videos_to_show_here_">No videos to show here.</string>
+    <string name="avatar">avatar</string>
+    <string name="pick_or_record_a_video_to_upload">Upload an existing video from your device or record a new one</string>
+    <string name="see_the_newly_uploaded_video">See the newly uploaded video</string>
+    <string name="watch_your_video">Watch your video</string>
+    <string name="video_submitted_to_ytdl">Video submitted to YTDL</string>
+    <string name="playing_uploaded_video">Playing uploaded video</string>
+    <string name="playing_the_video_in_upload_progress">Playing the video in upload progress</string>
+
+</resources>

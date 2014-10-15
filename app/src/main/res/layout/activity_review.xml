@@ -1,0 +1,49 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:divider="?android:dividerHorizontal"
+    android:horizontalSpacing="10dp"
+    android:orientation="vertical"
+    android:showDividers="middle"
+    android:verticalSpacing="10dp"
+    tools:context=".ReviewActivity">
+
+    <FrameLayout
+        android:id="@+id/detail_container"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
+
+        <VideoView
+            android:id="@+id/videoView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center" />
+    </FrameLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="#eee">
+
+        <Button
+            android:id="@+id/upload_button"
+            style="?android:attr/borderlessButtonStyle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:drawableTop="@drawable/ic_av_upload"
+            android:ellipsize="end"
+            android:fontFamily="sans-serif-condensed"
+            android:hint="@string/button_upload"
+            android:maxLines="2"
+
+            android:onClick="uploadVideo"
+            android:padding="8dp"
+            android:textAppearance="?android:textAppearanceLarge"
+            android:textColorHint="#c00"
+            android:textStyle="bold" />
+
+    </LinearLayout>
+
+</LinearLayout>
