@@ -370,6 +370,8 @@ public class MainActivity extends Activity implements
                         .build();
                 try {
                     youtube.videos().update("snippet", updateVideo).execute();
+                } catch (UserRecoverableAuthIOException e) {
+                    startActivityForResult(e.getIntent(), REQUEST_AUTHORIZATION);
                 } catch (IOException e) {
                     Log.e(TAG, e.getMessage());
                 }
