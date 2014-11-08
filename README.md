@@ -9,11 +9,11 @@ This application utilizes [YouTube Data API v3](https://developers.google.com/yo
 
 To use this application,
 
-1) [Register your Android app](https://developers.google.com/youtube/android/player/register)
-
-2) Enable the YouTube Data API v3 and Google+ API in your [Google Developers Console](https://console.developers.google.com).
-
-3) Plug in your Playlist Id into Constants.java and Android API Key into Auth.java
+1. In your [Google Developers Console](https://console.developers.google.com),
+ 1. Enable the YouTube Data API v3 and Google+ API.
+ 1. Create a client ID for Android, using your SHA1 and package name.
+1. [Register your Android app](https://developers.google.com/youtube/android/player/register)
+1. Plug in your Playlist Id into Constants.java and Android API Key into Auth.java
 
 ![alt tag](https://ytd-android.googlecode.com/files/YTDL.png)
 
