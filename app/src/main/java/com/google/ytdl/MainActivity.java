@@ -107,6 +107,8 @@ public class MainActivity extends Activity implements
         getWindow().requestFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
         super.onCreate(savedInstanceState);
 
+        mUploadsListFragment = new UploadsListFragment(getApplicationContext());
+
         // Check to see if the proper keys and playlist IDs have been set up
         if (!isCorrectlyConfigured()) {
             setContentView(R.layout.developer_setup_required);
@@ -131,6 +133,7 @@ public class MainActivity extends Activity implements
 
             mUploadsListFragment = (UploadsListFragment) getFragmentManager()
                     .findFragmentById(R.id.list_fragment);
+
         }
     }
 

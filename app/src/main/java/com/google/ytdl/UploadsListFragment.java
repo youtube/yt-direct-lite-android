@@ -14,8 +14,10 @@
 
 package com.google.ytdl;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.Fragment;
+import android.content.Context;
 import android.content.IntentSender;
 import android.os.Bundle;
 import android.util.Log;
@@ -31,7 +33,8 @@ import android.widget.Toast;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesClient.ConnectionCallbacks;
 import com.google.android.gms.common.GooglePlayServicesClient.OnConnectionFailedListener;
-import com.google.android.gms.plus.PlusClient;
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.plus.Plus;
 import com.google.android.gms.plus.PlusOneButton;
 import com.google.android.gms.plus.model.people.Person;
 import com.google.ytdl.util.ImageFetcher;
@@ -46,23 +49,35 @@ import java.util.List;
  *         Left side fragment showing user's uploaded YouTube videos.
  */
 public class UploadsListFragment extends Fragment implements ConnectionCallbacks,
-        OnConnectionFailedListener {
+        OnConnectionFailedListener, GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener {
 
     private static final String TAG = UploadsListFragment.class.getName();
     private Callbacks mCallbacks;
     private ImageWorker mImageFetcher;
-    private PlusClient mPlusClient;
+    private GoogleApiClient mGoogleApiClient;
     private GridView mGridView;
+    private static Context mContext;
 
     public UploadsListFragment() {
     }
 
+    @SuppressLint("ValidFragment")
+    public UploadsListFragment(Context context) {
+        mContext = context;
+    }
+
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        mPlusClient = new PlusClient.Builder(getActivity(), this, this)
-                .setScopes(Auth.SCOPES)
+
+        mGoogleApiClient = new GoogleApiClient.Builder(mContext)
+                .addConnectionCallbacks(this)
+                .addOnConnectionFailedListener(this)
+                .addApi(Plus.API)
+                .addScope(Plus.SCOPE_PLUS_PROFILE)
                 .build();
+
     }
 
     @Override
@@ -90,13 +105,14 @@ public class UploadsListFragment extends Fragment implements ConnectionCallbacks
     }
 
     public void setProfileInfo() {
-        if (!mPlusClient.isConnected() || mPlusClient.getCurrentPerson() == null) {
+        //not sure if mGoogleapiClient.isConnect is appropriate...
+        if (!mGoogleApiClient.isConnected() || Plus.PeopleApi.getCurrentPerson(mGoogleApiClient) == null) {
             ((ImageView) getView().findViewById(R.id.avatar))
                     .setImageDrawable(null);
             ((TextView) getView().findViewById(R.id.display_name))
                     .setText(R.string.not_signed_in);
         } else {
-            Person currentPerson = mPlusClient.getCurrentPerson();
+            Person currentPerson = Plus.PeopleApi.getCurrentPerson(mGoogleApiClient);
             if (currentPerson.hasImage()) {
                 mImageFetcher.loadImage(currentPerson.getImage().getUrl(),
                         ((ImageView) getView().findViewById(R.id.avatar)));
@@ -111,13 +127,13 @@ public class UploadsListFragment extends Fragment implements ConnectionCallbacks
     @Override
     public void onResume() {
         super.onResume();
-        mPlusClient.connect();
+        mGoogleApiClient.connect();
     }
 
     @Override
     public void onPause() {
         super.onPause();
-        mPlusClient.disconnect();
+        mGoogleApiClient.disconnect();
     }
 
     @Override
@@ -127,7 +143,12 @@ public class UploadsListFragment extends Fragment implements ConnectionCallbacks
         }
 
         setProfileInfo();
-        mCallbacks.onConnected(mPlusClient.getAccountName());
+        mCallbacks.onConnected(Plus.AccountApi.getAccountName(mGoogleApiClient));
+    }
+
+    @Override
+    public void onConnectionSuspended(int i) {
+
     }
 
     @Override
@@ -215,7 +236,7 @@ public class UploadsListFragment extends Fragment implements ConnectionCallbacks
                     .setText(video.getTitle());
             mImageFetcher.loadImage(video.getThumbUri(),
                     (ImageView) convertView.findViewById(R.id.thumbnail));
-            if (mPlusClient.isConnected()) {
+            if (mGoogleApiClient.isConnected()) {
                 ((PlusOneButton) convertView.findViewById(R.id.plus_button))
                         .initialize(video.getWatchUri(), null);
             }
