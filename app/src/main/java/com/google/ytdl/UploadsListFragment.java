@@ -31,8 +31,8 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.common.ConnectionResult;
-import com.google.android.gms.common.GooglePlayServicesClient.ConnectionCallbacks;
-import com.google.android.gms.common.GooglePlayServicesClient.OnConnectionFailedListener;
+import com.google.android.gms.common.api.GoogleApiClient.ConnectionCallbacks;
+import com.google.android.gms.common.api.GoogleApiClient.OnConnectionFailedListener;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.plus.Plus;
 import com.google.android.gms.plus.PlusOneButton;
@@ -49,7 +49,7 @@ import java.util.List;
  *         Left side fragment showing user's uploaded YouTube videos.
  */
 public class UploadsListFragment extends Fragment implements ConnectionCallbacks,
-        OnConnectionFailedListener, GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener {
+        OnConnectionFailedListener {
 
     private static final String TAG = UploadsListFragment.class.getName();
     private Callbacks mCallbacks;
@@ -149,10 +149,6 @@ public class UploadsListFragment extends Fragment implements ConnectionCallbacks
     @Override
     public void onConnectionSuspended(int i) {
 
-    }
-
-    @Override
-    public void onDisconnected() {
     }
 
     @Override
