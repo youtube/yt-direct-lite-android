@@ -21,7 +21,6 @@ import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccoun
 import com.google.api.client.http.HttpTransport;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.gson.GsonFactory;
-import com.google.ytdl.util.ImageFetcher;
 import com.google.ytdl.util.VideoData;
 
 /*
@@ -195,7 +194,6 @@ public class PlayActivity extends Activity implements
     }
 
     public interface Callbacks {
-        public ImageFetcher onGetImageFetcher();
 
         public void onVideoSelected(VideoData video);
 

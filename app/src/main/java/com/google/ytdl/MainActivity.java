@@ -42,6 +42,7 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.android.volley.toolbox.ImageLoader;
 import com.google.android.gms.common.GooglePlayServicesUtil;
 import com.google.api.client.extensions.android.http.AndroidHttp;
 import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential;
@@ -58,7 +59,7 @@ import com.google.api.services.youtube.model.PlaylistItemListResponse;
 import com.google.api.services.youtube.model.Video;
 import com.google.api.services.youtube.model.VideoListResponse;
 import com.google.api.services.youtube.model.VideoSnippet;
-import com.google.ytdl.util.ImageFetcher;
+import com.google.ytdl.util.NetworkSingleton;
 import com.google.ytdl.util.Upload;
 import com.google.ytdl.util.Utils;
 import com.google.ytdl.util.VideoData;
@@ -95,7 +96,7 @@ public class MainActivity extends Activity implements
     final HttpTransport transport = AndroidHttp.newCompatibleTransport();
     final JsonFactory jsonFactory = new GsonFactory();
     GoogleAccountCredential credential;
-    private ImageFetcher mImageFetcher;
+    private ImageLoader mImageLoader;
     private String mChosenAccountName;
     private Uri mFileURI = null;
     private VideoData mVideoData;
@@ -116,7 +117,7 @@ public class MainActivity extends Activity implements
         } else {
             setContentView(R.layout.activity_main);
 
-            ensureFetcher();
+            ensureLoader();
 
             credential = GoogleAccountCredential.usingOAuth2(
                     getApplicationContext(), Arrays.asList(Auth.SCOPES));
@@ -230,12 +231,10 @@ public class MainActivity extends Activity implements
                 broadcastReceiver, intentFilter);
     }
 
-    private void ensureFetcher() {
-        if (mImageFetcher == null) {
-            mImageFetcher = new ImageFetcher(this, 512, 512);
-            mImageFetcher.addImageCache(getFragmentManager(),
-                    new com.google.ytdl.util.ImageCache.ImageCacheParams(this,
-                            "cache"));
+    private void ensureLoader() {
+        if (mImageLoader == null) {
+            // Get the ImageLoader through your singleton class.
+            mImageLoader = NetworkSingleton.getInstance(this).getImageLoader();
         }
     }
 
@@ -504,9 +503,9 @@ public class MainActivity extends Activity implements
     }
 
     @Override
-    public ImageFetcher onGetImageFetcher() {
-        ensureFetcher();
-        return mImageFetcher;
+    public ImageLoader onGetImageLoader() {
+        ensureLoader();
+        return mImageLoader;
     }
 
     @Override
