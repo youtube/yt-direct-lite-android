@@ -30,15 +30,15 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.android.volley.toolbox.ImageLoader;
+import com.android.volley.toolbox.NetworkImageView;
 import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.GoogleApiClient.ConnectionCallbacks;
 import com.google.android.gms.common.api.GoogleApiClient.OnConnectionFailedListener;
-import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.plus.Plus;
 import com.google.android.gms.plus.PlusOneButton;
 import com.google.android.gms.plus.model.people.Person;
-import com.google.ytdl.util.ImageFetcher;
-import com.google.ytdl.util.ImageWorker;
 import com.google.ytdl.util.VideoData;
 
 import java.util.List;
@@ -52,11 +52,11 @@ public class UploadsListFragment extends Fragment implements ConnectionCallbacks
         OnConnectionFailedListener {
 
     private static final String TAG = UploadsListFragment.class.getName();
+    private static Context mContext;
     private Callbacks mCallbacks;
-    private ImageWorker mImageFetcher;
     private GoogleApiClient mGoogleApiClient;
     private GridView mGridView;
-    private static Context mContext;
+    private ImageLoader mImageLoader;
 
     public UploadsListFragment() {
     }
@@ -114,8 +114,9 @@ public class UploadsListFragment extends Fragment implements ConnectionCallbacks
         } else {
             Person currentPerson = Plus.PeopleApi.getCurrentPerson(mGoogleApiClient);
             if (currentPerson.hasImage()) {
-                mImageFetcher.loadImage(currentPerson.getImage().getUrl(),
-                        ((ImageView) getView().findViewById(R.id.avatar)));
+                // Set the URL of the image that should be loaded into this view, and
+                // specify the ImageLoader that will be used to make the request.
+                ((NetworkImageView) getView().findViewById(R.id.avatar)).setImageUrl(currentPerson.getImage().getUrl(), mImageLoader);
             }
             if (currentPerson.hasDisplayName()) {
                 ((TextView) getView().findViewById(R.id.display_name))
@@ -179,18 +180,18 @@ public class UploadsListFragment extends Fragment implements ConnectionCallbacks
         }
 
         mCallbacks = (Callbacks) activity;
-        mImageFetcher = mCallbacks.onGetImageFetcher();
+        mImageLoader = mCallbacks.onGetImageLoader();
     }
 
     @Override
     public void onDetach() {
         super.onDetach();
         mCallbacks = null;
-        mImageFetcher = null;
+        mImageLoader = null;
     }
 
     public interface Callbacks {
-        public ImageFetcher onGetImageFetcher();
+        public ImageLoader onGetImageLoader();
 
         public void onVideoSelected(VideoData video);
 
@@ -230,8 +231,7 @@ public class UploadsListFragment extends Fragment implements ConnectionCallbacks
             VideoData video = mVideos.get(position);
             ((TextView) convertView.findViewById(android.R.id.text1))
                     .setText(video.getTitle());
-            mImageFetcher.loadImage(video.getThumbUri(),
-                    (ImageView) convertView.findViewById(R.id.thumbnail));
+            ((NetworkImageView) convertView.findViewById(R.id.thumbnail)).setImageUrl(video.getThumbUri(), mImageLoader);
             if (mGoogleApiClient.isConnected()) {
                 ((PlusOneButton) convertView.findViewById(R.id.plus_button))
                         .initialize(video.getWatchUri(), null);
