@@ -22,13 +22,18 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.provider.MediaStore;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v4.content.LocalBroadcastManager;
 import android.text.TextUtils;
+import android.text.style.MetricAffectingSpan;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -41,7 +46,7 @@ import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
-
+import android.Manifest;
 import com.android.volley.toolbox.ImageLoader;
 import com.google.android.gms.common.GooglePlayServicesUtil;
 import com.google.api.client.extensions.android.http.AndroidHttp;
@@ -105,8 +110,15 @@ public class MainActivity extends Activity implements
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        if (Build.VERSION.SDK_INT > 22) {
+           // if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION != PackageManager.PERMISSION_GRANTED) {// if you want to check if permission has been given from before
+                final String[] permissions = new String[]{Manifest.permission.GET_ACCOUNTS};
+                ActivityCompat.requestPermissions(this, permissions, 0);
+            //}
+        }
         getWindow().requestFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
         super.onCreate(savedInstanceState);
+
 
         mUploadsListFragment = new UploadsListFragment(getApplicationContext());
 
@@ -643,6 +655,19 @@ public class MainActivity extends Activity implements
                         .getParcelableExtra(REQUEST_AUTHORIZATION_INTENT_PARAM);
                 startActivityForResult(toRun, REQUEST_AUTHORIZATION);
             }
+        }
+    }
+
+    @Override
+
+    public void onRequestPermissionsResult(int permsRequestCode, String[] permissions, int[] grantResults) {
+
+        switch (permsRequestCode) {
+
+            case 200:
+                boolean audioAccepted = grantResults[0] == PackageManager.PERMISSION_GRANTED;
+                break;
+
         }
     }
 }

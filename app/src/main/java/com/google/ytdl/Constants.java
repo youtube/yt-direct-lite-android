@@ -24,6 +24,6 @@ public class Constants {
     public static final String DEFAULT_KEYWORD = "ytdl";
     // A playlist ID is a string that begins with PL. You must replace this string with the correct
     // playlist ID for the app to work
-    public static final String UPLOAD_PLAYLIST = "Replace me with the playlist ID you want to upload into";
+    public static final String UPLOAD_PLAYLIST = "PLUNZIK3bUsNeXDBKJ-u-ZnNgHWv8bAItN";
     public static final String APP_NAME = "ytd-android";
 }
