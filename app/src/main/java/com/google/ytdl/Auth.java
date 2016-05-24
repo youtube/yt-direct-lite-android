@@ -19,7 +19,7 @@ import com.google.api.services.youtube.YouTubeScopes;
 
 public class Auth {
     // Register an API key here: https://console.developers.google.com
-    public static final String KEY = "Replace me with your API key";
+    public static final String KEY = "AIzaSyAJ6WxPuRxLoOCTxrpxx3DNm8To38z-Xyg";
 
     public static final String[] SCOPES = {Scopes.PROFILE, YouTubeScopes.YOUTUBE};
 }
