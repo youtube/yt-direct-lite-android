@@ -660,7 +660,7 @@ public class MainActivity extends Activity implements
 
     @Override
 
-    public void onRequestPermissionsResult(int permsRequestCode, String[] permissions, int[] grantResults) {
+    public void onRequestPermissionsResult(int permsRequestCode, String[] permissions, int[] grantResults) { // here for reference , can be commented out if required
 
         switch (permsRequestCode) {
 
