@@ -111,10 +111,10 @@ public class MainActivity extends Activity implements
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         if (Build.VERSION.SDK_INT > 22) {
-           // if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION != PackageManager.PERMISSION_GRANTED) {// if you want to check if permission has been given from before
+            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {// if you want to check if permission has been given from before
                 final String[] permissions = new String[]{Manifest.permission.GET_ACCOUNTS};
                 ActivityCompat.requestPermissions(this, permissions, 0);
-            //}
+            }
         }
         getWindow().requestFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
         super.onCreate(savedInstanceState);
@@ -658,7 +658,7 @@ public class MainActivity extends Activity implements
         }
     }
 
-    @Override
+   /* @Override
 
     public void onRequestPermissionsResult(int permsRequestCode, String[] permissions, int[] grantResults) { // here for reference , can be commented out if required
 
@@ -669,5 +669,5 @@ public class MainActivity extends Activity implements
                 break;
 
         }
-    }
+    }*/
 }
